@@ -4,14 +4,9 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <esp_timer.h>
-#include "tlc59711.h"
 
-typedef struct
-{
-    uint8_t r;
-    uint8_t g;
-    uint8_t b;
-} rgb_t;
+#include "tlc59711.h"
+#include "colors.h"
 
 static void write_row(void *arg);
 static void effect_loop();
@@ -85,10 +80,14 @@ static void effect_loop()
 {
     while (1)
     {
-        for (int i = 0; i < 256; i++)
+        for (uint8_t i = 0; i < 255; i++)
         {
-            memset(frame_buffer, i, sizeof(rgb_t) * 512);
-            vTaskDelay(10 / portTICK_PERIOD_MS);
+            for (int x = 0; x < 512; x++)
+            {
+                hsv_t hsv = {i, 255, 255};
+                frame_buffer[x] = hsv_to_rgb(hsv);
+            }
+            vTaskDelay(20 / portTICK_PERIOD_MS);
         }
     }
 }

@@ -2,6 +2,7 @@
 # without default 'CMakeLists.txt' file.
 
 set(app_sources
+	"colors.c"
 	"main.c"
 	"tlc59711.c"
 )
