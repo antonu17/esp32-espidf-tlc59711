@@ -1,12 +1,12 @@
+#include <esp_timer.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
-#include <esp_timer.h>
 
-#include "tlc59711.h"
 #include "colors.h"
+#include "tlc59711.h"
 
 static void write_row(void *arg);
 static void effect_loop();
@@ -17,11 +17,10 @@ static tlc_config_t config = {
     .data_pin = 23,
     .sclk_pin = 18,
     .spi_mode = 0,
-    .spi_clock_speed_hz = 10000000, // 10 MHz
+    .spi_clock_speed_hz = 10000000,  // 10 MHz
 };
 
-void app_main()
-{
+void app_main() {
     const esp_timer_create_args_t write_row_timer_args = {
         .callback = &write_row,
         .name = "write_row",
@@ -38,8 +37,7 @@ void app_main()
     ESP_ERROR_CHECK(esp_timer_start_periodic(write_row_timer, 2000));
 }
 
-static void write_row(void *arg)
-{
+static void write_row(void *arg) {
     static uint8_t current_row = 0;
     static bool spi_running = false;
 
@@ -76,14 +74,10 @@ static void write_row(void *arg)
         current_row = 0;
 }
 
-static void effect_loop()
-{
-    while (1)
-    {
-        for (uint8_t i = 0; i < 255; i++)
-        {
-            for (int x = 0; x < 512; x++)
-            {
+static void effect_loop() {
+    while (1) {
+        for (uint8_t i = 0; i < 255; i++) {
+            for (int x = 0; x < 512; x++) {
                 hsv_t hsv = {i, 255, 255};
                 frame_buffer[x] = hsv_to_rgb(hsv);
             }
