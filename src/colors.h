@@ -19,4 +19,4 @@ typedef struct
 
 rgb_t hsv_to_rgb(hsv_t hsv);
 
-#endif // COLORS_H
+#endif  // COLORS_H

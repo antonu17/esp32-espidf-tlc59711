@@ -3,6 +3,8 @@
 
 #include <driver/spi_master.h>
 
+#define TLC59711_BUFFER_SIZE 28
+
 typedef struct
 {
     int num_drivers;
@@ -25,4 +27,4 @@ void _tlc_init_spi_driver(int data_pin, int sclk_pin, uint8_t spi_mode, int spi_
 void _tlc_allocate_spi_buffer();
 uint8_t _8bit_to_7bit(uint8_t val);
 
-#endif // TLC59711_H
+#endif  // TLC59711_H
