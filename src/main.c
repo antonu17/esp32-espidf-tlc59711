@@ -71,37 +71,43 @@ static void write_row(void *arg) {
 }
 
 static void effect_loop() {
-    int func = 0, iter = 0;
-
+    rgb_t rgb;
     while (1) {
         for (uint8_t i = 0; i < 255; i++) {
-            rgb_t rgb;
+            rgb_t rgb_hsv = hue_to_rgb_hsv(i);
+            rgb_t rgb_linear = hue_to_rgb_linear(i);
+            rgb_t rgb_sine = hue_to_rgb_sine(i);
+            rgb_t rgb_sine2 = hue_to_rgb_sine2(i);
 
-            switch (func) {
-                case 0:
-                    rgb = hue_to_rgb_hsv(i);
-                    break;
-                case 1:
-                    rgb = hue_to_rgb_linear(i);
-                    break;
-                case 2:
-                    rgb = hue_to_rgb_sine(i);
-                    break;
-                case 3:
-                    rgb = hue_to_rgb_sine2(i);
-                    break;
+            for (int row = 0; row < 8; row++) {
+                switch (row) {
+                    case 0:
+                    case 4:
+                        rgb = rgb_hsv;
+                        break;
+
+                    case 1:
+                    case 5:
+                        rgb = rgb_linear;
+                        break;
+
+                    case 2:
+                    case 6:
+                        rgb = rgb_sine;
+                        break;
+
+                    case 3:
+                    case 7:
+                        rgb = rgb_sine2;
+                        break;
+                }
+
+                for (int x = 0; x < 64; x++) {
+                    frame_buffer[row * 64 + x] = rgb;
+                }
             }
 
-            for (int x = 0; x < 512; x++) {
-                frame_buffer[x] = rgb;
-            }
             vTaskDelay(20 / portTICK_PERIOD_MS);
         }
-
-        if (++iter < 3) continue;
-        if (++func > 3) {
-            func = 0;
-        }
-        iter = 0;
     }
 }
