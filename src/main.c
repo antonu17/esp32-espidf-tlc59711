@@ -33,40 +33,36 @@ void app_main() {
     // Effect loop function is running as a low priority task
     xTaskCreate(effect_loop, "effect_loop", 4096, NULL, tskIDLE_PRIORITY, NULL);
 
-    // Write to the TLC59711 stack via the High Resolution Timer every 2000us (~60 fps)
-    ESP_ERROR_CHECK(esp_timer_start_periodic(write_row_timer, 2000));
+    // Write to the TLC59711 stack via the High Resolution Timer every 500us (~250 fps)
+    ESP_ERROR_CHECK(esp_timer_start_periodic(write_row_timer, 500));
 }
 
 static void write_row(void *arg) {
     static uint8_t current_row = 0;
     static bool spi_running = false;
 
+    if (spi_running)
+        tlc_wait_write();
+    else
+        spi_running = true;
+
+    /*
+        The Real display function is currently commented out
+        to test frame deflection emulation.
+    */
     rgb_t *row = frame_buffer + current_row * 64;
+    for (int i = 0; i < 64; i++) {
+        rgb_t px = *row++;
+        tlc_set_led(i, px.r, px.g, px.b);
+    }
 
     /* Emulate frame deflection:
        - light up only one LED at a time.
        - display the first pixel from the current row
     */
-    uint8_t leds[8] = {0, 1, 2, 3, 4, 5, 6, 7};
-    rgb_t px = *row;
     tlc_reset_leds();
-    tlc_set_led(leds[current_row], px.r, px.g, px.b);
-
-    /*
-        The Real display function is currently commented out
-        to test frame deflection emulation.
-
-        for (int i = 0; i < 64; i++)
-        {
-            rgb_t px = *row++;
-            tlc_set_led(i, px.r, px.g, px.b);
-        }
-    */
-
-    if (spi_running)
-        tlc_wait_write();
-    else
-        spi_running = true;
+    rgb_t px = frame_buffer[current_row * 64];
+    tlc_set_led(current_row, px.r, px.g, px.b);
 
     tlc_queue_write();
 
@@ -75,13 +71,37 @@ static void write_row(void *arg) {
 }
 
 static void effect_loop() {
+    int func = 0, iter = 0;
+
     while (1) {
         for (uint8_t i = 0; i < 255; i++) {
+            rgb_t rgb;
+
+            switch (func) {
+                case 0:
+                    rgb = hue_to_rgb_hsv(i);
+                    break;
+                case 1:
+                    rgb = hue_to_rgb_linear(i);
+                    break;
+                case 2:
+                    rgb = hue_to_rgb_sine(i);
+                    break;
+                case 3:
+                    rgb = hue_to_rgb_sine2(i);
+                    break;
+            }
+
             for (int x = 0; x < 512; x++) {
-                hsv_t hsv = {i, 255, 255};
-                frame_buffer[x] = hsv_to_rgb(hsv);
+                frame_buffer[x] = rgb;
             }
             vTaskDelay(20 / portTICK_PERIOD_MS);
         }
+
+        if (++iter < 3) continue;
+        if (++func > 3) {
+            func = 0;
+        }
+        iter = 0;
     }
 }
