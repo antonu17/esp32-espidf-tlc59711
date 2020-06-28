@@ -5,6 +5,8 @@ set(app_sources
 	"colors.c"
 	"main.c"
 	"tlc59711.c"
+	"wifi.c"
+	"http.c"
 )
 
 idf_component_register(SRCS ${app_sources})
