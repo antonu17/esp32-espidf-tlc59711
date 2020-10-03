@@ -7,6 +7,7 @@ set(app_sources
 	"tlc59711.c"
 	"wifi.c"
 	"http.c"
+	"mic.c"
 )
 
 idf_component_register(SRCS ${app_sources})

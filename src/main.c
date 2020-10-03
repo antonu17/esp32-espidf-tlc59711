@@ -17,6 +17,7 @@ void effect_loop();
 
 void init_wifi();
 void init_http();
+void init_mic();
 
 static rgb_t frame_buffer[512];
 static tlc_config_t config = {
@@ -86,10 +87,6 @@ void write_row(void *arg) {
     previous_row = current_row++;
     if (current_row > 7)
         current_row = 0;
-}
-
-void effect_loop() {
-    color_wheel();
 }
 
 void one_pixel() {
@@ -205,4 +202,8 @@ void one_row() {
             vTaskDelay(500 / portTICK_PERIOD_MS);
         }
     }
+}
+
+void effect_loop() {
+    color_wheel();
 }
