@@ -14,7 +14,10 @@ set(app_sources
 	"framebuffer.c"
 	"effects/cube_color_wheel.c"
 	"effects/wave_color_wheel.c"
+	"effects/mic_spectrum.c"
 	"effects/effects.c"
+	"event_loop.c"
 )
 
-idf_component_register(SRCS ${app_sources})
+idf_component_register(SRCS ${app_sources}
+					REQUIRES esp-dsp)

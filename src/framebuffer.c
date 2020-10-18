@@ -1,10 +1,11 @@
+#include "framebuffer.h"
+
+#include <esp_timer.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
-#include <esp_timer.h>
-#include "driver/gpio.h"
 
+#include "driver/gpio.h"
 #include "tlc59711.h"
-#include "framebuffer.h"
 
 rgb_t frame_buffer[512];
 
@@ -60,5 +61,42 @@ void init_framebuffer() {
 
     // Write to the TLC59711 stack via the High Resolution Timer every 1250us (~100 fps)
     ESP_ERROR_CHECK(esp_timer_start_periodic(write_row_timer, 1250));
+}
 
+void fb_clear() {
+    memset(frame_buffer, 0, sizeof(frame_buffer));
+}
+
+rgb_t fb_get_pixel(uint8_t x, uint8_t y, uint8_t z) {
+    int x_axis = x;
+    int y_axis = y * 8;
+    int z_axis = z * 64;
+
+    return frame_buffer[x_axis + y_axis + z_axis];
+}
+
+void fb_set_pixel(uint8_t x, uint8_t y, uint8_t z, rgb_t c) {
+    int x_axis = x;
+    int y_axis = y * 8;
+    int z_axis = z * 64;
+
+    frame_buffer[x_axis + y_axis + z_axis] = c;
+}
+
+void fb_shift_x(fb_shift_direction_t direction) {
+    for (int z = 0; z < 8; z++) {
+        for (int y = 0; y < 8; y++) {
+            for (int x = 0; x < 8; x++) {
+                rgb_t c = {0};
+                if (direction == FB_SHIFT_FORWARD) {
+                    int a_x = 7 - x;
+                    if (a_x > 0) c = fb_get_pixel(a_x - 1, y, z);
+                    fb_set_pixel(a_x, y, z, c);
+                } else {
+                    if (x < 7) c = fb_get_pixel(x + 1, y, z);
+                    fb_set_pixel(x, y, z, c);
+                }
+            }
+        }
+    }
 }

@@ -13,21 +13,26 @@
 #include "driver/gpio.h"
 #include "driver/i2s.h"
 #include "esp_log.h"
+#include "esp_event.h"
 #include "esp_spiffs.h"
 #include "esp_system.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
 #include "freertos/queue.h"
 #include "freertos/task.h"
+#include "esp_dsp.h"
 
+#include "event_loop.h"
+#include "mic.h"
 #include "spiffs.h"
 
 #define TAG "MIC"
 
+#define N_SAMPLES 1024
 #define I2S_SAMPLE_RATE (16000)
 #define I2S_SAMPLE_BITS (I2S_BITS_PER_SAMPLE_16BIT)
 #define I2S_NUM (I2S_NUM_0)
-#define I2S_READ_LEN (1 * 1024)
+#define I2S_READ_LEN (2 * N_SAMPLES)
 
 #define I2S_BCK_IO (GPIO_NUM_4)
 #define I2S_WS_IO (GPIO_NUM_2)
@@ -37,9 +42,6 @@
 #define I2S_CHANNEL_NUM (1)
 #define RECORD_TIME (5)
 #define FLASH_RECORD_SIZE (I2S_CHANNEL_NUM * I2S_SAMPLE_RATE * I2S_SAMPLE_BITS / 8 * RECORD_TIME)
-
-const char filename[] = "/spiffs/recording.wav";
-const int headerSize = 44;
 
 void i2s_init() {
     esp_err_t err;
@@ -81,7 +83,8 @@ void i2s_init() {
     ESP_LOGI(TAG, "I2S driver installed.");
 }
 
-void disp_buf(uint8_t* buf, int length) {
+void disp_buf(uint8_t* buf, int length)
+{
     printf("======\n");
     for (int i = 0; i < length; i++) {
         printf("%02x ", buf[i]);
@@ -92,95 +95,96 @@ void disp_buf(uint8_t* buf, int length) {
     printf("======\n");
 }
 
-void wavHeader(uint8_t* header, int wavSize) {
-    header[0] = 'R';
-    header[1] = 'I';
-    header[2] = 'F';
-    header[3] = 'F';
-    unsigned int fileSize = wavSize + headerSize - 8;
-    header[4] = (uint8_t)(fileSize & 0xFF);
-    header[5] = (uint8_t)((fileSize >> 8) & 0xFF);
-    header[6] = (uint8_t)((fileSize >> 16) & 0xFF);
-    header[7] = (uint8_t)((fileSize >> 24) & 0xFF);
-    header[8] = 'W';
-    header[9] = 'A';
-    header[10] = 'V';
-    header[11] = 'E';
-    header[12] = 'f';
-    header[13] = 'm';
-    header[14] = 't';
-    header[15] = ' ';
-    header[16] = 0x10;
-    header[17] = 0x00;
-    header[18] = 0x00;
-    header[19] = 0x00;
-    header[20] = 0x01;
-    header[21] = 0x00;
-    header[22] = 0x01;
-    header[23] = 0x00;
-    header[24] = 0x80;
-    header[25] = 0x3E;
-    header[26] = 0x00;
-    header[27] = 0x00;
-    header[28] = 0x00;
-    header[29] = 0x7D;
-    header[30] = 0x00;
-    header[31] = 0x00;
-    header[32] = 0x02;
-    header[33] = 0x00;
-    header[34] = 0x10;
-    header[35] = 0x00;
-    header[36] = 'd';
-    header[37] = 'a';
-    header[38] = 't';
-    header[39] = 'a';
-    header[40] = (uint8_t)(wavSize & 0xFF);
-    header[41] = (uint8_t)((wavSize >> 8) & 0xFF);
-    header[42] = (uint8_t)((wavSize >> 16) & 0xFF);
-    header[43] = (uint8_t)((wavSize >> 24) & 0xFF);
-}
-
 void i2s_adc(void* arg) {
     int i2s_read_len = I2S_READ_LEN;
+    int N = N_SAMPLES;
     size_t bytes_read;
     char* i2s_read_buff = (char*)calloc(i2s_read_len, sizeof(char));
+    int16_t* samples_sc16 = (int16_t*) i2s_read_buff;
+    float* samples_fc32 = (float*)calloc(N, sizeof(float));
 
-    // int flash_wr_size = 0;
-    // uint8_t* flash_write_buff = (uint8_t*) calloc(i2s_read_len, sizeof(char));
+    uint8_t data[8] = {0};
+    float data_f32[8] = {0};
+    float wind[N];
+    float y_cf[N*2];
+    // Pointers to result array
+    float* y1_cf = &y_cf[0];
+    // float* y2_cf = &y_cf[N];
 
-    // FILE* f = fopen(filename, "w");
-    // if (f == NULL) {
-    //     ESP_LOGE(TAG, "Failed to open file for writing");
-    //     return;
-    // }
+    esp_err_t ret;
+    ret = dsps_fft2r_init_fc32(NULL, CONFIG_DSP_MAX_FFT_SIZE);
+    if (ret  != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Not possible to initialize FFT. Error = %i", ret);
+        return;
+    }
+    // Window coefficients
+    dsps_wind_hann_f32(wind, N);
 
-    // uint8_t header[headerSize];
-    // wavHeader(header, FLASH_RECORD_SIZE);
-    // fwrite(header, headerSize, 1, f);
-
-    // while (flash_wr_size < FLASH_RECORD_SIZE) {
     while (1) {
-        //read data from I2S bus, in this case, from ADC.
+        float positive_sampels_count = 0;
+        float positive_sampels_sum = 0;
+        float positive_sampels_avg = 0;
+
         i2s_read(I2S_NUM, (void*)i2s_read_buff, i2s_read_len, &bytes_read, portMAX_DELAY);
-        // disp_buf((uint8_t*)i2s_read_buff, 64);
-        //save original data from I2S(ADC) into flash.
-        // fwrite(i2s_read_buff, bytes_read, 1, f);
-        // flash_wr_size += i2s_read_len;
-        // ets_printf("Sound recording %u%%\n", flash_wr_size * 100 / FLASH_RECORD_SIZE);
-        // ets_printf("Unused stack %u\n", uxTaskGetStackHighWaterMark(NULL));
+        for(int i = 0; i < N_SAMPLES; i++) {
+            float sample = ((float) samples_sc16[i]) / 10000; //32768
+            samples_fc32[i] = sample;
+            if (sample > 0) {
+                positive_sampels_count++;
+                positive_sampels_sum += sample;
+            }
+            // printf("%d\n", samples_sc16[i]);
+        }
+        positive_sampels_avg = positive_sampels_sum / positive_sampels_count;
+
+        // ESP_LOGW(TAG, "Signal");
+        // dsps_view(samples_fc32, N, 64, 10,  -1, 1, '.');
+        // disp_buf((uint8_t*) i2s_read_buff, 64);
+
+        // Convert two input vectors to one complex vector
+        for (int i=0 ; i<N ; i++)
+        {
+            y_cf[i*2 + 0] = samples_fc32[i]; // * wind[i];
+            y_cf[i*2 + 1] = 0;
+        }
+
+        dsps_fft2r_fc32(y_cf, N);
+        dsps_bit_rev_fc32(y_cf, N);
+        dsps_cplx2reC_fc32(y_cf, N);
+        for (int i = 0 ; i < N/2 ; i++) {
+            y1_cf[i] = 10 * log10f((y1_cf[i * 2 + 0] * y1_cf[i * 2 + 0] + y1_cf[i * 2 + 1] * y1_cf[i * 2 + 1])/N);
+            // y2_cf[i] = 10 * log10f((y2_cf[i * 2 + 0] * y2_cf[i * 2 + 0] + y2_cf[i * 2 + 1] * y2_cf[i * 2 + 1])/N);
+        }
+        // ESP_LOGW(TAG, "Signal x1");
+        // dsps_view(y1_cf, N/2, 64, 10,  -60, 40, '|');
+        // ESP_LOGW(TAG, "Signal x2");
+        // dsps_view(y2_cf, N/2, 64, 10,  -60, 40, '|');
+
+        int bin_size = (N/2) / 8;
+        memset(data_f32, 0, 8 * sizeof(float));
+        memset(data, 0, 8 * sizeof(uint8_t));
+        for (int i = 0; i < N/2; i++) {
+            int bin = i / bin_size;
+            // ESP_LOGI(TAG, "bin size: %d, sample: %d, current bin: %d", bin_size, i, bin);
+            data_f32[bin] = fmax(data_f32[bin], fabs(y1_cf[i]));
+        }
+        for (int i = 0; i<8; i++) {
+            data_f32[i] *= positive_sampels_sum;
+            data[i] = (uint8_t)data_f32[i];
+        }
+        // ESP_LOGI(TAG, "Frame ready: [%03d %03d %03d %03d %03d %03d %03d %03d]", data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
+
+        ESP_ERROR_CHECK(esp_event_post_to(event_loop, MIC_EVENTS, MIC_EVENT_FRAME_READY, data, 8 * sizeof(uint8_t), portMAX_DELAY));
+
+        // vTaskDelay(100 / portTICK_PERIOD_MS);
     }
     free(i2s_read_buff);
     i2s_read_buff = NULL;
-
-    // fclose(f);
-    // ESP_LOGI(TAG, "File written");
-    // list_dir(BASE_PATH);
-
-    // ets_printf("Unused stack %u\n", uxTaskGetStackHighWaterMark(NULL));
     vTaskDelete(NULL);
 }
 
 void init_mic() {
     i2s_init();
-    xTaskCreate(i2s_adc, "i2s_adc", 1024 * 2, NULL, 5, NULL);
+    xTaskCreate(i2s_adc, "i2s_adc", 1024 * 16, NULL, 5, NULL);
 };

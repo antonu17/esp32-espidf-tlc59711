@@ -10,28 +10,28 @@ void wave_color_wheel() {
         for (int row = 0; row < 8; row++) {
             switch (row) {
                 case 0:
-                    rgb = hue_to_rgb_sine2(c0);
+                    rgb = hue_to_rgb_linear(c0);
                     break;
                 case 1:
-                    rgb = hue_to_rgb_sine2(c1);
+                    rgb = hue_to_rgb_linear(c1);
                     break;
                 case 2:
-                    rgb = hue_to_rgb_sine2(c2);
+                    rgb = hue_to_rgb_linear(c2);
                     break;
                 case 3:
-                    rgb = hue_to_rgb_sine2(c3);
+                    rgb = hue_to_rgb_linear(c3);
                     break;
                 case 4:
-                    rgb = hue_to_rgb_sine2(c4);
+                    rgb = hue_to_rgb_linear(c4);
                     break;
                 case 5:
-                    rgb = hue_to_rgb_sine2(c5);
+                    rgb = hue_to_rgb_linear(c5);
                     break;
                 case 6:
-                    rgb = hue_to_rgb_sine2(c6);
+                    rgb = hue_to_rgb_linear(c6);
                     break;
                 case 7:
-                    rgb = hue_to_rgb_sine2(c7);
+                    rgb = hue_to_rgb_linear(c7);
                     break;
             }
 
@@ -40,14 +40,14 @@ void wave_color_wheel() {
             }
         }
 
-        c0++;
-        c1++;
-        c2++;
-        c3++;
-        c4++;
-        c5++;
-        c6++;
-        c7++;
+        c0--;
+        c1--;
+        c2--;
+        c3--;
+        c4--;
+        c5--;
+        c6--;
+        c7--;
 
         vTaskDelay(20 / portTICK_PERIOD_MS);
     }
