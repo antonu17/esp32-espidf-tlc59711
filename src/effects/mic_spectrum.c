@@ -20,7 +20,7 @@ void mic_frame_ready_handler(void* handler_arg, esp_event_base_t base, int32_t i
 
     ESP_LOGI(TAG, "Frame ready: [%d %d %d %d %d %d %d %d]", s[0] / 32, s[1] / 32, s[2] / 32, s[3] / 32, s[4] / 32, s[5] / 32, s[6] / 32, s[7] / 32);
 
-    fb_shift_x(FB_SHIFT_BACK);
+    fb_shift(FB_AXIS_X, FB_SHIFT_BACK);
 
     for (int x = 0; x < 8; x++) {
         uint8_t v = s[x] / 32;

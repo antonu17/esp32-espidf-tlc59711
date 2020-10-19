@@ -1,11 +1,11 @@
+#include "effects.h"
+
+#include <esp_event.h>
+#include <esp_log.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
-#include "esp_event.h"
-#include "esp_log.h"
-
 #include "event_loop.h"
-#include "effects.h"
 
 static const char *TAG = "EFFECTS";
 esp_event_loop_handle_t effects_event_loop;
@@ -13,7 +13,10 @@ esp_event_loop_handle_t effects_event_loop;
 TaskFunction_t effect_functions[] = {
     cube_color_wheel,
     wave_color_wheel,
-    mic_spectrum};
+    rain,
+    shift_planes,
+    mic_spectrum,
+};
 
 void effect_loop() {
     TaskHandle_t xHandle = NULL;

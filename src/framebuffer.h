@@ -28,6 +28,13 @@ enum fb_shift_direction {
 };
 typedef enum fb_shift_direction fb_shift_direction_t;
 
+enum fb_axis {
+    FB_AXIS_X = 0,
+    FB_AXIS_Y,
+    FB_AXIS_Z
+};
+typedef enum fb_axis fb_axis_t;
+
 void init_framebuffer();
 void fb_clear();
 
@@ -45,5 +52,7 @@ void fb_clear();
  */
 void fb_set_pixel(uint8_t x, uint8_t y, uint8_t z, rgb_t c);
 void fb_shift_x(fb_shift_direction_t direction);
+void fb_shift(fb_axis_t axis, fb_shift_direction_t direction);
+void fb_set_plane(fb_axis_t axis, uint8_t x, rgb_t c);
 
 #endif  // FRAMEBUFFER_H

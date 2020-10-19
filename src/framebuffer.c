@@ -1,10 +1,10 @@
 #include "framebuffer.h"
 
+#include <driver/gpio.h>
 #include <esp_timer.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
-#include "driver/gpio.h"
 #include "tlc59711.h"
 
 rgb_t frame_buffer[512];
@@ -83,19 +83,68 @@ void fb_set_pixel(uint8_t x, uint8_t y, uint8_t z, rgb_t c) {
     frame_buffer[x_axis + y_axis + z_axis] = c;
 }
 
-void fb_shift_x(fb_shift_direction_t direction) {
-    for (int z = 0; z < 8; z++) {
-        for (int y = 0; y < 8; y++) {
-            for (int x = 0; x < 8; x++) {
-                rgb_t c = {0};
-                if (direction == FB_SHIFT_FORWARD) {
-                    int a_x = 7 - x;
-                    if (a_x > 0) c = fb_get_pixel(a_x - 1, y, z);
-                    fb_set_pixel(a_x, y, z, c);
-                } else {
-                    if (x < 7) c = fb_get_pixel(x + 1, y, z);
-                    fb_set_pixel(x, y, z, c);
+void fb_shift(fb_axis_t axis, fb_shift_direction_t direction) {
+    uint8_t get_px, set_px, x, y, z;
+    rgb_t c;
+    bool should_read;
+    for (z = 0; z < 8; z++) {
+        for (y = 0; y < 8; y++) {
+            for (x = 0; x < 8; x++) {
+                c = (rgb_t){0, 0, 0};
+                should_read = false;
+                get_px = 0;
+                set_px = 0;
+                switch (direction) {
+                    case FB_SHIFT_FORWARD:
+                        get_px = 7 - x - 1;
+                        set_px = 7 - x;
+                        if (set_px > 0) should_read = true;
+                        break;
+                    case FB_SHIFT_BACK:
+                        get_px = x + 1;
+                        set_px = x;
+                        if (set_px < 7) should_read = true;
+                        break;
+                    default:
+                        break;
                 }
+                switch (axis) {
+                    case FB_AXIS_X:
+                        if (should_read) c = fb_get_pixel(get_px, y, z);
+                        fb_set_pixel(set_px, y, z, c);
+                        break;
+                    case FB_AXIS_Y:
+                        if (should_read) c = fb_get_pixel(y, get_px, z);
+                        fb_set_pixel(y, set_px, z, c);
+                        break;
+                    case FB_AXIS_Z:
+                        if (should_read) c = fb_get_pixel(y, z, get_px);
+                        fb_set_pixel(y, z, set_px, c);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+    }
+}
+
+void fb_set_plane(fb_axis_t axis, uint8_t x, rgb_t c) {
+    int y, z;
+    for (y = 0; y < 8; y++) {
+        for (z = 0; z < 8; z++) {
+            switch (axis) {
+                case FB_AXIS_X:
+                    fb_set_pixel(x, y, z, c);
+                    break;
+                case FB_AXIS_Y:
+                    fb_set_pixel(y, x, z, c);
+                    break;
+                case FB_AXIS_Z:
+                    fb_set_pixel(y, z, x, c);
+                    break;
+                default:
+                    break;
             }
         }
     }
