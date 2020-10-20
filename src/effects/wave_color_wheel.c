@@ -1,11 +1,19 @@
+#include <esp_log.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
 #include "effects.h"
 
+#define TAG "EFFECT_WAVE_COLOR_WHEEL"
+
+void wave_color_wheel_stop();
+
 void wave_color_wheel() {
     rgb_t rgb;
     uint8_t c0 = 0, c1 = 10, c2 = 20, c3 = 30, c4 = 40, c5 = 50, c6 = 60, c7 = 70;
+
+    ESP_ERROR_CHECK(esp_event_handler_register_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, wave_color_wheel_stop, NULL));
+
     while (1) {
         for (int row = 0; row < 8; row++) {
             switch (row) {
@@ -51,4 +59,10 @@ void wave_color_wheel() {
 
         vTaskDelay(20 / portTICK_PERIOD_MS);
     }
+}
+
+void wave_color_wheel_stop() {
+    ESP_LOGI(TAG, "stopped");
+    fb_clear();
+    ESP_ERROR_CHECK(esp_event_handler_unregister_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, wave_color_wheel_stop));
 }

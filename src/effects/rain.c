@@ -2,7 +2,6 @@
 #include <esp_log.h>
 
 #include "effects.h"
-#include "event_loop.h"
 
 #define TAG "EFFECT_RAIN"
 
@@ -14,7 +13,7 @@ void rain() {
     ESP_ERROR_CHECK(esp_event_handler_register_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, rain_stop, NULL));
 
     fb_clear();
-    while (true) {
+    while (1) {
         int i;
         int rnd_x;
         int rnd_y;
@@ -34,5 +33,6 @@ void rain() {
 
 void rain_stop() {
     ESP_LOGI(TAG, "stopped");
+    fb_clear();
     ESP_ERROR_CHECK(esp_event_handler_unregister_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, rain_stop));
 }
