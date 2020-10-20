@@ -51,6 +51,7 @@ void fb_clear();
  *        right, bottom, back is 7, 7, 7
  */
 void fb_set_pixel(uint8_t x, uint8_t y, uint8_t z, rgb_t c);
+rgb_t fb_get_pixel(uint8_t x, uint8_t y, uint8_t z);
 void fb_shift_x(fb_shift_direction_t direction);
 void fb_shift(fb_axis_t axis, fb_shift_direction_t direction);
 void fb_set_plane(fb_axis_t axis, uint8_t x, rgb_t c);

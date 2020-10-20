@@ -9,7 +9,7 @@
 
 rgb_t frame_buffer[512];
 
-void write_row(void *arg) {
+void IRAM_ATTR write_row(void *arg) {
     static uint8_t previous_row = 0, current_row = 0;
     static uint8_t rows[] = {A0, A1, A2, A3, A4, A5, A6, A7};
 

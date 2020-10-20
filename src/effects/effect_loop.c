@@ -1,11 +1,10 @@
-#include "effects.h"
-
 #include <esp_event.h>
 #include <esp_log.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/queue.h>
 #include <freertos/task.h>
 
+#include "effects.h"
 #include "event_loop.h"
 
 #define EFFECT_TIMEOUT pdMS_TO_TICKS(15000)
@@ -15,6 +14,7 @@ esp_event_loop_handle_t effects_event_loop;
 QueueHandle_t effects_queue = NULL;
 
 TaskFunction_t effect_functions[] = {
+    vertical_travelers,
     cube_color_wheel,
     wave_color_wheel,
     rain,

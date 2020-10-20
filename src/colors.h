@@ -24,5 +24,6 @@ rgb_t hue_to_rgb_hsv(uint8_t hue);
 rgb_t hue_to_rgb_linear(uint8_t hue);
 rgb_t hue_to_rgb_sine(uint8_t hue);
 rgb_t hue_to_rgb_sine2(uint8_t hue);
+int color_equals(rgb_t c1, rgb_t c2);
 
 #endif  // COLORS_H

@@ -14,6 +14,7 @@ void wave_color_wheel();
 void mic_spectrum();
 void shift_planes();
 void rain();
+void vertical_travelers();
 
 extern esp_event_loop_handle_t effects_event_loop;
 extern QueueHandle_t effects_queue;

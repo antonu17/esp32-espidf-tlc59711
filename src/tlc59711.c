@@ -13,7 +13,7 @@ static uint8_t _num_drivers;
 static spi_device_handle_t _spi;
 static uint8_t *_spi_buffer;
 
-void tlc_init(tlc_config_t *config) {
+void IRAM_ATTR tlc_init(tlc_config_t *config) {
     _num_drivers = config->num_drivers;
     _tlc_init_spi_driver(config->data_pin, config->sclk_pin, config->spi_mode, config->spi_clock_speed_hz);
     _tlc_allocate_spi_buffer();
@@ -22,7 +22,7 @@ void tlc_init(tlc_config_t *config) {
     ESP_LOGD(TAG, "tlc_init() finished");
 }
 
-void tlc_set_brightness(uint8_t r, uint8_t g, uint8_t b) {
+void IRAM_ATTR tlc_set_brightness(uint8_t r, uint8_t g, uint8_t b) {
     // Write command
     uint32_t command = 0x25;
 
@@ -46,7 +46,7 @@ void tlc_set_brightness(uint8_t r, uint8_t g, uint8_t b) {
     }
 }
 
-void tlc_set_led(int led, uint8_t r, uint8_t g, uint8_t b) {
+void IRAM_ATTR tlc_set_led(int led, uint8_t r, uint8_t g, uint8_t b) {
     ESP_LOGI(TAG, "set LED #%d: (%d, %d, %d)", led, r, g, b);
 
     if (led > _num_drivers * 4)
@@ -75,13 +75,13 @@ void tlc_set_led(int led, uint8_t r, uint8_t g, uint8_t b) {
     ESP_LOG_BUFFER_HEXDUMP(TAG, _spi_buffer, _num_drivers * TLC59711_BUFFER_SIZE, ESP_LOG_VERBOSE);
 }
 
-void tlc_reset_leds() {
+void IRAM_ATTR tlc_reset_leds() {
     for (int i = 0; i < _num_drivers; i++) {
         memset(_spi_buffer + TLC59711_BUFFER_SIZE * i + 4, 0, 24);
     }
 }
 
-void tlc_oneshot_write() {
+void IRAM_ATTR tlc_oneshot_write() {
     static spi_transaction_t trans;
     memset(&trans, 0, sizeof(spi_transaction_t));
 
@@ -90,7 +90,7 @@ void tlc_oneshot_write() {
     ESP_ERROR_CHECK(spi_device_polling_transmit(_spi, &trans));
 }
 
-void tlc_queue_write() {
+void IRAM_ATTR tlc_queue_write() {
     static spi_transaction_t trans;
     memset(&trans, 0, sizeof(spi_transaction_t));
 
@@ -99,13 +99,13 @@ void tlc_queue_write() {
     ESP_ERROR_CHECK(spi_device_queue_trans(_spi, &trans, portMAX_DELAY));
 }
 
-void tlc_wait_write() {
+void IRAM_ATTR tlc_wait_write() {
     static spi_transaction_t *rtrans;
     ESP_ERROR_CHECK(spi_device_get_trans_result(_spi, &rtrans, portMAX_DELAY));
     // We could inspect rtrans now if we received any info back. The TLC59711 is treated as write-only, though.
 }
 
-void _tlc_init_spi_driver(int data_pin, int sclk_pin, uint8_t spi_mode, int spi_clock_speed_hz) {
+void IRAM_ATTR _tlc_init_spi_driver(int data_pin, int sclk_pin, uint8_t spi_mode, int spi_clock_speed_hz) {
     spi_bus_config_t buscfg = {
         .mosi_io_num = data_pin,
         .miso_io_num = -1,
@@ -125,13 +125,13 @@ void _tlc_init_spi_driver(int data_pin, int sclk_pin, uint8_t spi_mode, int spi_
     ESP_ERROR_CHECK(spi_bus_add_device(VSPI_HOST, &devcfg, &_spi));
 }
 
-void _tlc_allocate_spi_buffer() {
+void IRAM_ATTR _tlc_allocate_spi_buffer() {
     _spi_buffer = heap_caps_calloc(_num_drivers, TLC59711_BUFFER_SIZE, MALLOC_CAP_DMA);
     assert(_spi_buffer != NULL);
     ESP_LOGD(TAG, "_spi_buffer starts at %p", _spi_buffer);
     ESP_LOGD(TAG, "_spi_buffer length %d", _num_drivers * TLC59711_BUFFER_SIZE);
 }
 
-uint8_t _8bit_to_7bit(uint8_t val) {
+uint8_t IRAM_ATTR _8bit_to_7bit(uint8_t val) {
     return val * 127 / 255;
 }

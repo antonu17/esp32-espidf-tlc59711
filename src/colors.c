@@ -155,3 +155,7 @@ rgb_t hue_to_rgb_sine2(uint8_t hue) {
 
     return rgb;
 }
+
+int color_equals(rgb_t c1, rgb_t c2) {
+    return c1.r == c2.r && c1.g == c2.g && c1.b == c2.b;
+}
