@@ -149,3 +149,14 @@ void fb_set_plane(fb_axis_t axis, uint8_t x, rgb_t c) {
         }
     }
 }
+
+void fb_swap_pixels(uint8_t x1, uint8_t y1, uint8_t z1, uint8_t x2, uint8_t y2, uint8_t z2) {
+    rgb_t tmp = fb_get_pixel(x2, y2, z2);
+    fb_set_pixel(x2, y2, z2, fb_get_pixel(x1, y1, z1));
+    fb_set_pixel(x1, y1, z1, tmp);
+}
+
+int fb_pixel_is_off(uint8_t x, uint8_t y, uint8_t z) {
+    rgb_t c = fb_get_pixel(x, y, z);
+    return c.r == 0 && c.g == 0 && c.b == 0;
+}

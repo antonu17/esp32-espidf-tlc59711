@@ -20,6 +20,7 @@ set(app_sources
 	"effects/shift_planes.c"
 	"effects/rain.c"
 	"effects/vertical_travelers.c"
+	"effects/shift_suspend.c"
 )
 
 idf_component_register(SRCS ${app_sources}
