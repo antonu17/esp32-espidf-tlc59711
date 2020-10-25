@@ -14,6 +14,7 @@ esp_event_loop_handle_t effects_event_loop;
 QueueHandle_t effects_queue = NULL;
 
 TaskFunction_t effect_functions[] = {
+    wireframes,
     shift_suspend,
     vertical_travelers,
     cube_color_wheel,

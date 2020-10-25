@@ -5,14 +5,16 @@
 
 #define TAG "EFFECT_RAIN"
 
+#define SPEED pdMS_TO_TICKS(100)
+
 void rain_stop();
 
 void rain() {
     rgb_t c = {255, 255, 255};
 
     ESP_ERROR_CHECK(esp_event_handler_register_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, rain_stop, NULL));
-
     fb_clear();
+
     while (1) {
         int i;
         int rnd_x;
@@ -26,13 +28,13 @@ void rain() {
             rnd_y = rand() % 8;
             fb_set_pixel(rnd_x, rnd_y, 0, c);
         }
-        vTaskDelay(200 / portTICK_PERIOD_MS);
+        vTaskDelay(SPEED);
         fb_shift(FB_AXIS_Z, FB_SHIFT_FORWARD);
     }
 }
 
 void rain_stop() {
-    ESP_LOGI(TAG, "stopped");
     fb_clear();
+    ESP_LOGI(TAG, "stopped");
     ESP_ERROR_CHECK(esp_event_handler_unregister_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, rain_stop));
 }

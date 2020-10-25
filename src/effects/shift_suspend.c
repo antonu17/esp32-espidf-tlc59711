@@ -88,6 +88,7 @@ void shift_suspend() {
     uint8_t end = 1;
 
     ESP_ERROR_CHECK(esp_event_handler_register_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, shift_suspend_stop, NULL));
+    fb_clear();
 
     while (1) {
         _shift_suspend(FB_AXIS_X, FB_SHIFT_BACK);
@@ -98,12 +99,13 @@ void shift_suspend() {
         _shift_suspend(FB_AXIS_Z, FB_SHIFT_FORWARD);
     }
 
+    fb_clear();
     xQueueSend(effects_queue, (void*)&end, (TickType_t)0);
     vTaskDelete(NULL);
 }
 
 void shift_suspend_stop() {
-    ESP_LOGI(TAG, "stopped");
     fb_clear();
+    ESP_LOGI(TAG, "stopped");
     ESP_ERROR_CHECK(esp_event_handler_unregister_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, shift_suspend_stop));
 }

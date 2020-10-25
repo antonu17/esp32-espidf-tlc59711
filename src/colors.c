@@ -13,6 +13,11 @@
 #define HALF_PI 1.57079632
 #define PI 3.14159265
 
+rgb_t WHITE = {255, 255, 255};
+rgb_t RED = {255, 0, 0};
+rgb_t GREEN = {0, 255, 0};
+rgb_t BLUE = {0, 0, 255};
+
 rgb_t hsv_to_rgb(hsv_t hsv) {
     rgb_t rgb;
     float h, s, v, c, x, m;

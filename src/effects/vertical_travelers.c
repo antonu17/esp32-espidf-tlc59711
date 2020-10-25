@@ -18,6 +18,7 @@ void vertical_travelers() {
     int x, y, last_x = 0, last_y = 0;
 
     ESP_ERROR_CHECK(esp_event_handler_register_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, vertical_travelers_stop, NULL));
+    fb_clear();
 
     // Initial fill
     for (x = 0; x < 8; x++) {
@@ -45,8 +46,8 @@ void vertical_travelers() {
 }
 
 void vertical_travelers_stop() {
-    ESP_LOGI(TAG, "stopped");
     fb_clear();
+    ESP_LOGI(TAG, "stopped");
     ESP_ERROR_CHECK(esp_event_handler_unregister_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, vertical_travelers_stop));
 }
 

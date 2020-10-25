@@ -16,6 +16,7 @@ void shift_planes();
 void rain();
 void vertical_travelers();
 void shift_suspend();
+void wireframes();
 
 extern esp_event_loop_handle_t effects_event_loop;
 extern QueueHandle_t effects_queue;

@@ -13,6 +13,7 @@ void cube_color_wheel() {
     uint8_t c = 0;
 
     ESP_ERROR_CHECK(esp_event_handler_register_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, cube_color_wheel_stop, NULL));
+    fb_clear();
 
     while (1) {
         rgb = hue_to_rgb_sine2(c);
@@ -25,7 +26,7 @@ void cube_color_wheel() {
 }
 
 void cube_color_wheel_stop() {
-    ESP_LOGI(TAG, "stopped");
     fb_clear();
+    ESP_LOGI(TAG, "stopped");
     ESP_ERROR_CHECK(esp_event_handler_unregister_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, cube_color_wheel_stop));
 }

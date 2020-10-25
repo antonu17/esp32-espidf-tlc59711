@@ -13,6 +13,7 @@ void wave_color_wheel() {
     uint8_t c0 = 0, c1 = 10, c2 = 20, c3 = 30, c4 = 40, c5 = 50, c6 = 60, c7 = 70;
 
     ESP_ERROR_CHECK(esp_event_handler_register_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, wave_color_wheel_stop, NULL));
+    fb_clear();
 
     while (1) {
         for (int row = 0; row < 8; row++) {
@@ -62,7 +63,7 @@ void wave_color_wheel() {
 }
 
 void wave_color_wheel_stop() {
-    ESP_LOGI(TAG, "stopped");
     fb_clear();
+    ESP_LOGI(TAG, "stopped");
     ESP_ERROR_CHECK(esp_event_handler_unregister_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, wave_color_wheel_stop));
 }

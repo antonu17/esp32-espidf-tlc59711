@@ -63,6 +63,17 @@ void init_framebuffer() {
     ESP_ERROR_CHECK(esp_timer_start_periodic(write_row_timer, 1250));
 }
 
+void argorder(uint8_t ix1, uint8_t ix2, uint8_t *ox1, uint8_t *ox2) {
+    if (ix1 > ix2) {
+        uint8_t tmp;
+        tmp = ix1;
+        ix1 = ix2;
+        ix2 = tmp;
+    }
+    *ox1 = ix1;
+    *ox2 = ix2;
+}
+
 void fb_clear() {
     memset(frame_buffer, 0, sizeof(frame_buffer));
 }
@@ -147,6 +158,31 @@ void fb_set_plane(fb_axis_t axis, uint8_t x, rgb_t c) {
                     break;
             }
         }
+    }
+}
+
+void fb_draw_wireframe(uint8_t x1, uint8_t y1, uint8_t z1, uint8_t x2, uint8_t y2, uint8_t z2, rgb_t c) {
+    argorder(x1, x2, &x1, &x2);
+    argorder(y1, y2, &y1, &y2);
+    argorder(z1, z2, &z1, &z2);
+
+    for (uint8_t px = x1; px <= x2; px++) {
+        fb_set_pixel(px, y1, z1, c);
+        fb_set_pixel(px, y1, z2, c);
+        fb_set_pixel(px, y2, z1, c);
+        fb_set_pixel(px, y2, z2, c);
+    }
+    for (uint8_t px = y1 + 1; px < y2; px++) {
+        fb_set_pixel(x1, px, z1, c);
+        fb_set_pixel(x1, px, z2, c);
+        fb_set_pixel(x2, px, z1, c);
+        fb_set_pixel(x2, px, z2, c);
+    }
+    for (uint8_t px = z1 + 1; px < z2; px++) {
+        fb_set_pixel(x1, y1, px, c);
+        fb_set_pixel(x1, y2, px, c);
+        fb_set_pixel(x2, y1, px, c);
+        fb_set_pixel(x2, y2, px, c);
     }
 }
 
