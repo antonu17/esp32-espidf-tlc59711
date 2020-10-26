@@ -27,6 +27,7 @@
 #include "spiffs.h"
 
 #define TAG "MIC"
+#define DELAY pdMS_TO_TICKS(10)
 
 #define N_SAMPLES 1024
 #define I2S_SAMPLE_RATE (16000)
@@ -53,7 +54,7 @@ void i2s_init() {
         .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
         .communication_format = (i2s_comm_format_t)(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB),
         .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
-        .dma_buf_count = 64,
+        .dma_buf_count = 2,
         .dma_buf_len = 1024,
         .use_apll = 1,
     };
@@ -176,8 +177,7 @@ void i2s_adc(void* arg) {
         // ESP_LOGI(TAG, "Frame ready: [%03d %03d %03d %03d %03d %03d %03d %03d]", data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
 
         ESP_ERROR_CHECK(esp_event_post_to(event_loop, MIC_EVENTS, MIC_EVENT_FRAME_READY, data, 8 * sizeof(uint8_t), portMAX_DELAY));
-
-        // vTaskDelay(100 / portTICK_PERIOD_MS);
+        vTaskDelay(DELAY);
     }
     free(i2s_read_buff);
     i2s_read_buff = NULL;
@@ -186,5 +186,5 @@ void i2s_adc(void* arg) {
 
 void init_mic() {
     i2s_init();
-    xTaskCreate(i2s_adc, "i2s_adc", 1024 * 16, NULL, 5, NULL);
+    xTaskCreatePinnedToCore(i2s_adc, "i2s_adc", 1024 * 16, NULL, 1, NULL, 1);
 };
