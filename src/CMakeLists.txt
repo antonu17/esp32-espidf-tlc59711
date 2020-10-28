@@ -12,7 +12,6 @@ set(app_sources
 	"http/http.c"
 	"http/rest_server.c"
 	"http/file_server.c"
-	"mic.c"
 	"effects/effect_loop.c"
 	"effects/cube_color_wheel.c"
 	"effects/wave_color_wheel.c"
