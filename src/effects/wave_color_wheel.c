@@ -4,18 +4,25 @@
 
 #include "effects.h"
 
-#define TAG "EFFECT_WAVE_COLOR_WHEEL"
+#define TAG __FILE__
 
-void wave_color_wheel_stop();
+static int running;
+
+void wave_color_wheel_stop() {
+    ESP_LOGI(TAG, "stop event received");
+    ESP_ERROR_CHECK(esp_event_handler_unregister_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, wave_color_wheel_stop));
+    running = 0;
+}
 
 void wave_color_wheel() {
     rgb_t rgb;
     uint8_t c0 = 0, c1 = 10, c2 = 20, c3 = 30, c4 = 40, c5 = 50, c6 = 60, c7 = 70;
 
     ESP_ERROR_CHECK(esp_event_handler_register_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, wave_color_wheel_stop, NULL));
-    fb_clear();
+    running = 1;
 
-    while (1) {
+    fb_clear();
+    while (running) {
         for (int row = 0; row < 8; row++) {
             switch (row) {
                 case 0:
@@ -60,10 +67,9 @@ void wave_color_wheel() {
 
         vTaskDelay(20 / portTICK_PERIOD_MS);
     }
-}
-
-void wave_color_wheel_stop() {
     fb_clear();
-    ESP_LOGI(TAG, "stopped");
-    ESP_ERROR_CHECK(esp_event_handler_unregister_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, wave_color_wheel_stop));
+
+    ESP_LOGD(TAG, "notify effect_loop");
+    xTaskNotify(effect_loop_task_handle, 0, eNoAction);
+    vTaskDelay(portMAX_DELAY);
 }

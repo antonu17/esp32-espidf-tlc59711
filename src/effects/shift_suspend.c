@@ -3,11 +3,17 @@
 
 #include "effects.h"
 
-#define TAG "EFFECT_SHIFT_SUSPEND"
+#define TAG __FILE__
 #define DELAY pdMS_TO_TICKS(500)
 #define SPEED pdMS_TO_TICKS(60)
 
-void shift_suspend_stop();
+static int running;
+
+void shift_suspend_stop() {
+    ESP_LOGI(TAG, "stop event received");
+    ESP_ERROR_CHECK(esp_event_handler_unregister_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, shift_suspend_stop));
+    running = 0;
+}
 
 void draw_positions_axis(fb_axis_t axis, uint8_t positions[64], fb_shift_direction_t direction) {
     int x, y, p;
@@ -85,12 +91,11 @@ void _shift_suspend(fb_axis_t axis, fb_shift_direction_t direction) {
 }
 
 void shift_suspend() {
-    uint8_t end = 1;
-
     ESP_ERROR_CHECK(esp_event_handler_register_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, shift_suspend_stop, NULL));
-    fb_clear();
+    running = 1;
 
-    while (1) {
+    fb_clear();
+    while (running) {
         _shift_suspend(FB_AXIS_X, FB_SHIFT_BACK);
         _shift_suspend(FB_AXIS_X, FB_SHIFT_FORWARD);
         _shift_suspend(FB_AXIS_Y, FB_SHIFT_BACK);
@@ -98,14 +103,9 @@ void shift_suspend() {
         _shift_suspend(FB_AXIS_Z, FB_SHIFT_BACK);
         _shift_suspend(FB_AXIS_Z, FB_SHIFT_FORWARD);
     }
-
     fb_clear();
-    xQueueSend(effects_queue, (void*)&end, (TickType_t)0);
-    vTaskDelete(NULL);
-}
 
-void shift_suspend_stop() {
-    fb_clear();
-    ESP_LOGI(TAG, "stopped");
-    ESP_ERROR_CHECK(esp_event_handler_unregister_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, shift_suspend_stop));
+    ESP_LOGD(TAG, "notify effect_loop");
+    xTaskNotify(effect_loop_task_handle, 0, eNoAction);
+    vTaskDelay(portMAX_DELAY);
 }

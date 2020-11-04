@@ -9,7 +9,7 @@
 #include "effects.h"
 #include "esp_dsp.h"
 
-#define TAG "EFFECT_MIC_SPECTRUM"
+#define TAG __FILE__
 #define DELAY pdMS_TO_TICKS(10)
 
 #define N_SAMPLES 1024
@@ -23,9 +23,8 @@
 #define I2S_DO_IO (-1)
 #define I2S_DI_IO (GPIO_NUM_15)
 
-void mic_spectrum_stop();
-
 TaskHandle_t i2s_adc_task_handle = NULL;
+static int running;
 
 void i2s_init() {
     esp_err_t err;
@@ -166,24 +165,32 @@ void mic_frame_ready_handler(void* handler_arg, esp_event_base_t base, int32_t i
     }
 }
 
-void mic_spectrum() {
-    ESP_ERROR_CHECK(esp_event_handler_register_with(event_loop, MIC_EVENTS, MIC_EVENT_FRAME_READY, mic_frame_ready_handler, NULL));
-    ESP_ERROR_CHECK(esp_event_handler_register_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, mic_spectrum_stop, NULL));
-    i2s_init();
-    xTaskCreatePinnedToCore(i2s_adc_task, "i2s_adc_task", 1024 * 16, NULL, 1, &i2s_adc_task_handle, 1);
-    fb_clear();
-    while (true) {
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
-}
-
 void mic_spectrum_stop() {
-    fb_clear();
-    ESP_LOGI(TAG, "stopped");
+    ESP_LOGI(TAG, "stop event received");
     if (i2s_adc_task_handle != NULL) {
         vTaskDelete(i2s_adc_task_handle);
     }
     i2s_deinit();
     ESP_ERROR_CHECK(esp_event_handler_unregister_with(event_loop, MIC_EVENTS, MIC_EVENT_FRAME_READY, mic_frame_ready_handler));
     ESP_ERROR_CHECK(esp_event_handler_unregister_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, mic_spectrum_stop));
+    running = 0;
+}
+
+void mic_spectrum() {
+    ESP_ERROR_CHECK(esp_event_handler_register_with(event_loop, MIC_EVENTS, MIC_EVENT_FRAME_READY, mic_frame_ready_handler, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, mic_spectrum_stop, NULL));
+    running = 1;
+
+    i2s_init();
+    xTaskCreatePinnedToCore(i2s_adc_task, "i2s_adc_task", 1024 * 16, NULL, 1, &i2s_adc_task_handle, 1);
+
+    fb_clear();
+    while (running) {
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+    fb_clear();
+
+    ESP_LOGI(TAG, "notify effect_loop");
+    xTaskNotify(effect_loop_task_handle, 0, eNoAction);
+    vTaskDelay(portMAX_DELAY);
 }

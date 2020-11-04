@@ -21,6 +21,7 @@ set(app_sources
 	"effects/vertical_travelers.c"
 	"effects/shift_suspend.c"
 	"effects/wireframes.c"
+	"effects/ripples.c"
 )
 
 idf_component_register(SRCS ${app_sources}

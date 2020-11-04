@@ -3,14 +3,19 @@
 
 #include "effects.h"
 
-#define TAG "EFFECT_WIREFRAMES"
+#define TAG __FILE__
 
 #define SPEED pdMS_TO_TICKS(60)
 #define DELAY pdMS_TO_TICKS(180)
 
 rgb_t frame_buffer[512];
+static int running;
 
-void wireframes_stop();
+void wireframes_stop() {
+    ESP_LOGI(TAG, "stop event received");
+    ESP_ERROR_CHECK(esp_event_handler_unregister_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, wireframes_stop));
+    running = 0;
+}
 
 void wireframe_woop_corner(uint8_t x, uint8_t y, uint8_t z, rgb_t c) {
     uint8_t x2, y2, z2;
@@ -76,10 +81,11 @@ void wireframe_woop_center(rgb_t c) {
 }
 
 void wireframes() {
-    uint8_t end = 1;
     ESP_ERROR_CHECK(esp_event_handler_register_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, wireframes_stop, NULL));
+    running = 1;
+
     fb_clear();
-    while (true) {
+    while (running) {
         wireframe_woop_corner(0, 0, 0, RED);
         wireframe_woop_corner(0, 0, 7, GREEN);
         wireframe_woop_corner(0, 7, 0, BLUE);
@@ -94,12 +100,8 @@ void wireframes() {
         wireframe_woop_center(BLUE);
     }
     fb_clear();
-    xQueueSend(effects_queue, (void*)&end, (TickType_t)0);
-    vTaskDelete(NULL);
-}
 
-void wireframes_stop() {
-    ESP_LOGI(TAG, "stopped");
-    fb_clear();
-    ESP_ERROR_CHECK(esp_event_handler_unregister_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, wireframes_stop));
+    ESP_LOGD(TAG, "notify effect_loop");
+    xTaskNotify(effect_loop_task_handle, 0, eNoAction);
+    vTaskDelay(portMAX_DELAY);
 }

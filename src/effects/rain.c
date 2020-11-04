@@ -3,19 +3,26 @@
 
 #include "effects.h"
 
-#define TAG "EFFECT_RAIN"
+#define TAG __FILE__
 
 #define SPEED pdMS_TO_TICKS(100)
 
-void rain_stop();
+static int running;
+
+void rain_stop() {
+    ESP_LOGI(TAG, "stop event received");
+    ESP_ERROR_CHECK(esp_event_handler_unregister_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, rain_stop));
+    running = 0;
+}
 
 void rain() {
     rgb_t c = {255, 255, 255};
 
     ESP_ERROR_CHECK(esp_event_handler_register_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, rain_stop, NULL));
-    fb_clear();
+    running = 1;
 
-    while (1) {
+    fb_clear();
+    while (running) {
         int i;
         int rnd_x;
         int rnd_y;
@@ -31,10 +38,9 @@ void rain() {
         vTaskDelay(SPEED);
         fb_shift(FB_AXIS_Z, FB_SHIFT_FORWARD);
     }
-}
-
-void rain_stop() {
     fb_clear();
-    ESP_LOGI(TAG, "stopped");
-    ESP_ERROR_CHECK(esp_event_handler_unregister_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, rain_stop));
+
+    ESP_LOGD(TAG, "notify effect_loop");
+    xTaskNotify(effect_loop_task_handle, 0, eNoAction);
+    vTaskDelay(portMAX_DELAY);
 }
