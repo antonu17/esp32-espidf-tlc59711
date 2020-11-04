@@ -15,6 +15,7 @@
 TaskHandle_t effect_loop_task_handle;
 
 TaskFunction_t effect_functions[] = {
+    sidewaves,
     ripples,
     shift_planes,
     mic_spectrum,

@@ -22,6 +22,8 @@ set(app_sources
 	"effects/shift_suspend.c"
 	"effects/wireframes.c"
 	"effects/ripples.c"
+	"effects/sidewaves.c"
+	"effects/utils.c"
 )
 
 idf_component_register(SRCS ${app_sources}
