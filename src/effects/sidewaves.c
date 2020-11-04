@@ -26,7 +26,7 @@ void sidewaves() {
     fb_clear();
 
     while (running) {
-        for (i = 0; i < 2000; i++) {
+        for (i = 0; i < 4000; i++) {
             origin_x = 3.5 + sin((float)i / 500) * 4;
             origin_y = 3.5 + cos((float)i / 500) * 4;
 

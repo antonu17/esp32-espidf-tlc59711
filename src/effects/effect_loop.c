@@ -16,15 +16,15 @@ TaskHandle_t effect_loop_task_handle;
 
 TaskFunction_t effect_functions[] = {
     sidewaves,
+    shift_suspend,
     ripples,
     shift_planes,
     mic_spectrum,
     cube_color_wheel,
-    wireframes,
-    shift_suspend,
     vertical_travelers,
-    wave_color_wheel,
+    wireframes,
     rain,
+    wave_color_wheel,
 };
 
 void effect_loop() {
