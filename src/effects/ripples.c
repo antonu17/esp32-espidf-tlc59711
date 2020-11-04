@@ -50,8 +50,3 @@ void ripples() {
     xTaskNotify(effect_loop_task_handle, 0, eNoAction);
     vTaskDelay(portMAX_DELAY);
 }
-
-// (3.5 - 3.5) * (3.5 - 3.5) + (0 - 0) * (0 - 0)
-// (3.5 - 3.5) * (3.5 - 3.5) + (8 - 0) * (8 - 0)
-// (3.5 - 3.5) * (3.5 - 3.5) + (0 - 8) * (0 - 8)
-// (3.5 - 3.5) * (3.5 - 3.5) + (2 - 8) * (2 - 8)

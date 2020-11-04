@@ -2,14 +2,10 @@
 #define EFFECTS_H
 
 #include <esp_event.h>
-#include <freertos/queue.h>
 #include <freertos/task.h>
 
 #include "event_loop.h"
 #include "framebuffer.h"
-
-#define EFFECT_TIMEOUT_BIT 0x01
-#define EFFECT_STOP_BIT 0x02
 
 void init_effects();
 
