@@ -158,9 +158,10 @@ void mic_frame_ready_handler(void* handler_arg, esp_event_base_t base, int32_t i
     for (int x = 0; x < 8; x++) {
         int8_t v = s[x];
         rgb = hue_to_rgb_sine2(c);
-        while (v >= 0) {
-            fb_set_pixel(7, x, 7 - v--, rgb);
-        }
+        // while (v >= 0) {
+        //     fb_set_pixel(7, x, 7 - v--, rgb);
+        // }
+        fb_set_pixel(7, x, 7 - v, rgb);
         c += 32;
     }
 }

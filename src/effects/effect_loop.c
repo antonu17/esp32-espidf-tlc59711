@@ -15,10 +15,11 @@
 TaskHandle_t effect_loop_task_handle;
 
 TaskFunction_t effect_functions[] = {
-    sidewaves,
-    shift_suspend,
-    ripples,
+    ball,
     shift_planes,
+    ripples,
+    shift_suspend,
+    sidewaves,
     mic_spectrum,
     cube_color_wheel,
     vertical_travelers,

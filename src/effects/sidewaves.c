@@ -21,29 +21,28 @@ void sidewaves() {
     ESP_ERROR_CHECK(esp_event_handler_register_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, sidewaves_stop, NULL));
     running = 1;
     float origin_x, origin_y, distance, height, ripple_interval;
-    int x, y, i;
+    int x, y;
+    uint16_t i = 0;
 
     fb_clear();
 
     while (running) {
-        for (i = 0; i < 4000; i++) {
-            origin_x = 3.5 + sin((float)i / 500) * 4;
-            origin_y = 3.5 + cos((float)i / 500) * 4;
+        i++;
+        origin_x = 3.5 + sin((float)i / 500) * 4;
+        origin_y = 3.5 + cos((float)i / 500) * 4;
 
-            for (x = 0; x < 8; x++) {
-                for (y = 0; y < 8; y++) {
-                    distance = distance2d(origin_x, origin_y, x, y) / 9.899495 * 8;
-                    ripple_interval = 2;
-                    height = 4 + sin(distance / ripple_interval + (float)i / 50) * 3.6;
+        fb_clear_draft();
+        for (x = 0; x < 8; x++) {
+            for (y = 0; y < 8; y++) {
+                distance = distance2d(origin_x, origin_y, x, y) / 9.899495 * 8;
+                ripple_interval = 2;
+                height = 4 + sin(distance / ripple_interval + (float)i / 50) * 3.6;
 
-                    fb_set_pixel(x, y, (int)height, hue_to_rgb_hsv(150 + ((uint8_t)distance * 24)));
-                }
+                fb_set_pixel_draft(x, y, (int)height, hue_to_rgb_hsv(150 + ((uint8_t)distance * 24)));
             }
-
-            vTaskDelay(2);
-            fb_clear();
         }
-        vTaskDelay(DELAY);
+        fb_draw_draft();
+        vTaskDelay(1);
     }
     fb_clear();
 

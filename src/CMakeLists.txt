@@ -24,6 +24,7 @@ set(app_sources
 	"effects/ripples.c"
 	"effects/sidewaves.c"
 	"effects/utils.c"
+	"effects/ball.c"
 )
 
 idf_component_register(SRCS ${app_sources}

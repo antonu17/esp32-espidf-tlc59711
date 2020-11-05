@@ -8,6 +8,7 @@
 #include "tlc59711.h"
 
 rgb_t frame_buffer[512];
+rgb_t frame_buffer_draft[512];
 
 void IRAM_ATTR write_row(void *arg) {
     static uint8_t previous_row = 0, current_row = 0;
@@ -78,6 +79,10 @@ void fb_clear() {
     memset(frame_buffer, 0, sizeof(frame_buffer));
 }
 
+void fb_clear_draft() {
+    memset(frame_buffer_draft, 0, sizeof(frame_buffer));
+}
+
 rgb_t fb_get_pixel(uint8_t x, uint8_t y, uint8_t z) {
     int x_axis = x;
     int y_axis = y * 8;
@@ -92,6 +97,14 @@ void fb_set_pixel(uint8_t x, uint8_t y, uint8_t z, rgb_t c) {
     int z_axis = z * 64;
 
     frame_buffer[x_axis + y_axis + z_axis] = c;
+}
+
+void fb_set_pixel_draft(uint8_t x, uint8_t y, uint8_t z, rgb_t c) {
+    int x_axis = x;
+    int y_axis = y * 8;
+    int z_axis = z * 64;
+
+    frame_buffer_draft[x_axis + y_axis + z_axis] = c;
 }
 
 void fb_shift(fb_axis_t axis, fb_shift_direction_t direction) {
@@ -195,4 +208,8 @@ void fb_swap_pixels(uint8_t x1, uint8_t y1, uint8_t z1, uint8_t x2, uint8_t y2, 
 int fb_pixel_is_off(uint8_t x, uint8_t y, uint8_t z) {
     rgb_t c = fb_get_pixel(x, y, z);
     return c.r == 0 && c.g == 0 && c.b == 0;
+}
+
+void fb_draw_draft() {
+    memcpy(frame_buffer, frame_buffer_draft, sizeof(frame_buffer));
 }

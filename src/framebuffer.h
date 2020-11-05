@@ -36,7 +36,6 @@ enum fb_axis {
 typedef enum fb_axis fb_axis_t;
 
 void init_framebuffer();
-void fb_clear();
 
 /**
  * @brief Set a pixel on cube framebuffer
@@ -58,5 +57,10 @@ void fb_set_plane(fb_axis_t axis, uint8_t x, rgb_t c);
 void fb_draw_wireframe(uint8_t x1, uint8_t y1, uint8_t z1, uint8_t x2, uint8_t y2, uint8_t z2, rgb_t c);
 void fb_swap_pixels(uint8_t x1, uint8_t y1, uint8_t z1, uint8_t x2, uint8_t y2, uint8_t z2);
 int fb_pixel_is_off(uint8_t x, uint8_t y, uint8_t z);
+void fb_clear();
+
+void fb_set_pixel_draft(uint8_t x, uint8_t y, uint8_t z, rgb_t c);
+void fb_draw_draft();
+void fb_clear_draft();
 
 #endif  // FRAMEBUFFER_H

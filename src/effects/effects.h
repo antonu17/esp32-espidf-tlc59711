@@ -19,9 +19,11 @@ void shift_suspend();
 void wireframes();
 void ripples();
 void sidewaves();
+void ball();
 
 // Utilities
 float distance2d(float x1, float y1, float x2, float y2);
+float distance3d (float x1, float y1, float z1, float x2, float y2, float z2);
 
 extern esp_event_loop_handle_t effects_event_loop;
 extern TaskHandle_t effect_loop_task_handle;
