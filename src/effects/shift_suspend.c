@@ -95,14 +95,12 @@ void shift_suspend() {
     running = 1;
 
     fb_clear();
-    while (running) {
-        _shift_suspend(FB_AXIS_X, FB_SHIFT_BACK);
-        _shift_suspend(FB_AXIS_X, FB_SHIFT_FORWARD);
-        _shift_suspend(FB_AXIS_Y, FB_SHIFT_BACK);
-        _shift_suspend(FB_AXIS_Y, FB_SHIFT_FORWARD);
-        _shift_suspend(FB_AXIS_Z, FB_SHIFT_BACK);
-        _shift_suspend(FB_AXIS_Z, FB_SHIFT_FORWARD);
-    }
+    _shift_suspend(FB_AXIS_X, FB_SHIFT_BACK);
+    _shift_suspend(FB_AXIS_X, FB_SHIFT_FORWARD);
+    _shift_suspend(FB_AXIS_Y, FB_SHIFT_BACK);
+    _shift_suspend(FB_AXIS_Y, FB_SHIFT_FORWARD);
+    _shift_suspend(FB_AXIS_Z, FB_SHIFT_BACK);
+    _shift_suspend(FB_AXIS_Z, FB_SHIFT_FORWARD);
     fb_clear();
 
     ESP_LOGD(TAG, "notify effect_loop");
