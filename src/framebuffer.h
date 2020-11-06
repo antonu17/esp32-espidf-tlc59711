@@ -18,9 +18,9 @@ extern rgb_t frame_buffer[512];
 
 #define GPIO_OUTPUT_PIN_SEL ((1ULL << A0) | (1ULL << A1) | (1ULL << A2) | (1ULL << A3) | (1ULL << A4) | (1ULL << A5) | (1ULL << A6) | (1ULL << A7))
 
-#define BRIGHTNESS_RED 200
-#define BRIGHTNESS_GREEN 200
-#define BRIGHTNESS_BLUE 200
+#define BRIGHTNESS_RED 180
+#define BRIGHTNESS_GREEN 180
+#define BRIGHTNESS_BLUE 180
 
 enum fb_shift_direction {
     FB_SHIFT_FORWARD = 0,
