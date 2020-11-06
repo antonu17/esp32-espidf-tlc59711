@@ -4,8 +4,8 @@
 #include "effects.h"
 
 #define TAG __FILE__
-#define DELAY pdMS_TO_TICKS(500)
-#define SPEED pdMS_TO_TICKS(60)
+#define DELAY pdMS_TO_TICKS(300)
+#define SPEED pdMS_TO_TICKS(40)
 
 static int running;
 
