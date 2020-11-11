@@ -10,10 +10,10 @@
 extern "C" {
 #endif
 
-typedef void (*stop_hook_t)();
-
 typedef struct effect_t effect_t;
 typedef struct effect_list_t effect_list_t;
+
+typedef void (*stop_hook_t)(effect_t *effect);
 
 typedef struct effect_t {
     const char *name;

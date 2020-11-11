@@ -30,6 +30,7 @@ effect_t *effect_new(char *name, TaskFunction_t function, stop_hook_t stop_hook)
 }
 
 void effect_free(effect_t *effect) {
+    ESP_LOGD(__FILE__, "delete effect: %s\t\t(%p)", effect->name, effect);
     free(effect);
 }
 
@@ -76,9 +77,6 @@ void effect_stop(void *handler_arg, esp_event_base_t base, int32_t id, void *eve
     effect_t *effect = (effect_t *)handler_arg;
     ESP_LOGI(effect->name, "stop event received (%p)", effect);
     effect->running = 0;
-    if (effect->stop_hook) {
-        effect->stop_hook();
-    }
 }
 
 void effect_run(effect_t *effect) {
@@ -106,9 +104,15 @@ void effect_run(effect_t *effect) {
 
     vTaskDelete(handle);
     ESP_LOGD(effect->name, "effect task deleted (%p)", effect);
+
+    if (effect->stop_hook) {
+        ESP_LOGD(effect->name, "stop hook: %s\t\t(%p)", effect->name, effect);
+        effect->stop_hook(effect);
+    }
 }
 
 void effect_loop() {
+    effect_run(effect_new("test", test, effect_free));
     for (;;) {
         for (int i = 0; i < effects->len; i++) {
             effect_run(effects->effect[i]);
@@ -132,7 +136,5 @@ void init_effects() {
     effects = effect_list_add(effects, effect_new("wave_color_wheel", wave_color_wheel, NULL));
 
     ESP_LOGI(__FILE__, "Number of effects: %d", effects->len);
-    test();
-
     xTaskCreatePinnedToCore(effect_loop, "effect_loop", 2048, NULL, 2, &effect_loop_task_handle, 0);
 }
