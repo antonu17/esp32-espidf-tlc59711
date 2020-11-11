@@ -21,6 +21,7 @@ void ripples();
 void sidewaves();
 void ball();
 void test();
+void fireworks();
 
 // Utilities
 float distance2d(float x1, float y1, float x2, float y2);

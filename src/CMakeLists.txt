@@ -26,6 +26,7 @@ set(app_sources
 	"effects/utils.c"
 	"effects/ball.c"
 	"effects/test.c"
+	"effects/fireworks.c"
 )
 
 idf_component_register(SRCS ${app_sources}

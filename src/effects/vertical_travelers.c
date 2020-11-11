@@ -19,7 +19,7 @@ void vertical_travelers_stop() {
     running = 0;
 }
 
-void send_pixel_down(uint8_t x, uint8_t y, TickType_t xTicksToDelay) {
+void send_pixel_up(uint8_t x, uint8_t y, TickType_t xTicksToDelay) {
     for (int i = 0; i < 7; i++) {
         fb_set_pixel(x, y, i, off);
         fb_set_pixel(x, y, i + 1, on);
@@ -27,7 +27,7 @@ void send_pixel_down(uint8_t x, uint8_t y, TickType_t xTicksToDelay) {
     }
 }
 
-void send_pixel_up(uint8_t x, uint8_t y, TickType_t xTicksToDelay) {
+void send_pixel_down(uint8_t x, uint8_t y, TickType_t xTicksToDelay) {
     for (int i = 7; i > 0; i--) {
         fb_set_pixel(x, y, i, off);
         fb_set_pixel(x, y, i - 1, on);
@@ -56,9 +56,9 @@ void vertical_travelers() {
 
         if (y != last_y && x != last_x) {
             if (color_equals(on, fb_get_pixel(x, y, 0))) {
-                send_pixel_down(x, y, SPEED);
-            } else {
                 send_pixel_up(x, y, SPEED);
+            } else {
+                send_pixel_down(x, y, SPEED);
             }
             last_y = y;
             last_x = x;

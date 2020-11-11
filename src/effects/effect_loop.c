@@ -15,6 +15,7 @@
 TaskHandle_t effect_loop_task_handle;
 
 TaskFunction_t effect_functions[] = {
+    fireworks,
     ball,
     shift_planes,
     ripples,

@@ -9,12 +9,12 @@
 
 rgb_t frame_buffer[512];
 rgb_t frame_buffer_draft[512];
+static uint8_t rows[] = {A0, A1, A2, A3, A4, A5, A6, A7};
 
 void IRAM_ATTR write_row(void *arg) {
     static uint8_t previous_row = 0, current_row = 0;
-    static uint8_t rows[] = {A0, A1, A2, A3, A4, A5, A6, A7};
 
-    rgb_t *row = frame_buffer + current_row * 64;
+    rgb_t *row = frame_buffer + ((7 - current_row) * 64);
     for (int i = 0; i < 64; i++) {
         rgb_t px = *row++;
         tlc_set_led(i, px.r, px.g, px.b);
@@ -38,6 +38,11 @@ void init_tlc() {
         .spi_clock_speed_hz = 20000000,  // 20 MHz
     };
 
+    tlc_init(&config);
+    tlc_set_brightness(BRIGHTNESS_RED, BRIGHTNESS_GREEN, BRIGHTNESS_BLUE);
+}
+
+void init_framebuffer() {
     gpio_config_t io_conf;
     io_conf.intr_type = GPIO_PIN_INTR_DISABLE;
     io_conf.mode = GPIO_MODE_OUTPUT;
@@ -46,11 +51,10 @@ void init_tlc() {
     io_conf.pull_up_en = 0;
     gpio_config(&io_conf);
 
-    tlc_init(&config);
-    tlc_set_brightness(BRIGHTNESS_RED, BRIGHTNESS_GREEN, BRIGHTNESS_BLUE);
-}
+    for (int i = 0; i < 8; i++) {
+        gpio_set_level(rows[i], 0);
+    }
 
-void init_framebuffer() {
     init_tlc();
     const esp_timer_create_args_t write_row_timer_args = {
         .callback = &write_row,
@@ -91,7 +95,18 @@ rgb_t fb_get_pixel(uint8_t x, uint8_t y, uint8_t z) {
     return frame_buffer[x_axis + y_axis + z_axis];
 }
 
+int in_range(uint8_t x, uint8_t y, uint8_t z) {
+    if (x < 8 && y < 8 && z < 8) {
+        return 0x01;
+    } else {
+        return 0x00;
+    }
+}
+
 void fb_set_pixel(uint8_t x, uint8_t y, uint8_t z, rgb_t c) {
+    if (!in_range(x, y, z)) {
+        return;
+    }
     int x_axis = x;
     int y_axis = y * 8;
     int z_axis = z * 64;
@@ -100,6 +115,9 @@ void fb_set_pixel(uint8_t x, uint8_t y, uint8_t z, rgb_t c) {
 }
 
 void fb_set_pixel_draft(uint8_t x, uint8_t y, uint8_t z, rgb_t c) {
+    if (!in_range(x, y, z)) {
+        return;
+    }
     int x_axis = x;
     int y_axis = y * 8;
     int z_axis = z * 64;

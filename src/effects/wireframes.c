@@ -5,8 +5,8 @@
 
 #define TAG __FILE__
 
-#define SPEED pdMS_TO_TICKS(60)
-#define DELAY pdMS_TO_TICKS(180)
+#define SPEED pdMS_TO_TICKS(40)
+#define DELAY pdMS_TO_TICKS(120)
 
 rgb_t frame_buffer[512];
 static int running;

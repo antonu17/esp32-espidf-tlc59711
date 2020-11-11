@@ -161,7 +161,7 @@ void mic_frame_ready_handler(void* handler_arg, esp_event_base_t base, int32_t i
         // while (v >= 0) {
         //     fb_set_pixel(7, x, 7 - v--, rgb);
         // }
-        fb_set_pixel(7, x, 7 - v, rgb);
+        fb_set_pixel(7, x, v, rgb);
         c += 32;
     }
 }
