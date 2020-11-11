@@ -1,4 +1,4 @@
-#define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
+#define LOG_LOCAL_LEVEL ESP_LOG_WARN
 
 #include "effect_loop.h"
 
@@ -75,7 +75,7 @@ void effect_start(void *arg) {
 
 void effect_stop(void *handler_arg, esp_event_base_t base, int32_t id, void *event_data) {
     effect_t *effect = (effect_t *)handler_arg;
-    ESP_LOGI(effect->name, "stop event received (%p)", effect);
+    ESP_LOGD(effect->name, "stop event received (%p)", effect);
     effect->running = 0;
 }
 
@@ -95,7 +95,7 @@ void effect_run(effect_t *effect) {
     }
 
     if (!effect_finished) {
-        ESP_LOGI(effect->name, "timeout effect (%p)", effect);
+        ESP_LOGD(effect->name, "timeout effect (%p)", effect);
         ESP_ERROR_CHECK(esp_event_post_to(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, NULL, 0, portMAX_DELAY));
         ESP_LOGD(effect->name, "stop event posted (%p)", effect);
         xTaskNotifyWait(0, 0, NULL, portMAX_DELAY);

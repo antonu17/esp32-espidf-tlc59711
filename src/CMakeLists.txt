@@ -11,6 +11,7 @@ set(app_sources
 	"tlc59711.c"
 	"framebuffer.c"
 	"wifi.c"
+	"stats.c"
 	"http/http.c"
 	"http/rest_server.c"
 	"http/file_server.c"
