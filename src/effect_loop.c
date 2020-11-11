@@ -67,9 +67,9 @@ effect_list_t *effect_list_add(effect_list_t *effects, effect_t *effect) {
 void effect_start(void *arg) {
     effect_t *effect = (effect_t *)arg;
     effect->function(effect);
-    ESP_ERROR_CHECK(esp_event_handler_unregister_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, effect_stop));
     xTaskNotify(effect_loop_task_handle, 0, eNoAction);
     ESP_LOGD(effect->name, "notification sent (%p)", effect);
+    ESP_ERROR_CHECK(esp_event_handler_unregister_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, effect_stop));
     vTaskDelay(portMAX_DELAY);
 }
 
@@ -122,12 +122,12 @@ void effect_loop() {
 
 void init_effects() {
     effects = effect_list_new();
-    effects = effect_list_add(effects, effect_new("linespin", linespin, NULL));
-    effects = effect_list_add(effects, effect_new("sinelines", sinelines, NULL));
     effects = effect_list_add(effects, effect_new("fireworks", fireworks, NULL));
     effects = effect_list_add(effects, effect_new("ball", ball, NULL));
+    effects = effect_list_add(effects, effect_new("linespin", linespin, NULL));
     effects = effect_list_add(effects, effect_new("shift_planes", shift_planes, NULL));
     effects = effect_list_add(effects, effect_new("ripples", ripples, NULL));
+    effects = effect_list_add(effects, effect_new("sinelines", sinelines, NULL));
     effects = effect_list_add(effects, effect_new("shift_suspend", shift_suspend, NULL));
     effects = effect_list_add(effects, effect_new("sidewaves", sidewaves, NULL));
     effects = effect_list_add(effects, effect_new("mic_spectrum", mic_spectrum, mic_spectrum_stop));

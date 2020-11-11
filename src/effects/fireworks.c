@@ -76,7 +76,7 @@ void fireworks(effect_t *effect) {
                 particles[f][2] += particles[f][5] / slowrate;
                 particles[f][2] -= gravity;
 
-                fb_set_pixel(particles[f][0], particles[f][1], particles[f][2], WHITE);
+                fb_set_pixel(particles[f][0], particles[f][1], particles[f][2], hue_to_rgb_linear(rand() % 255));
                 ESP_LOGD(TAG, "draw position and movement: %d", f);
             }
 

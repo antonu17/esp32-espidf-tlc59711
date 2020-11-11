@@ -72,21 +72,18 @@ void wireframe_woop_center(rgb_t c) {
 }
 
 void wireframes(effect_t *effect) {
-
     fb_clear();
-    while (effect->running) {
-        wireframe_woop_corner(0, 0, 0, RED);
-        wireframe_woop_corner(0, 0, 7, GREEN);
-        wireframe_woop_corner(0, 7, 0, BLUE);
-        wireframe_woop_corner(0, 7, 7, RED);
-        wireframe_woop_corner(7, 0, 0, GREEN);
-        wireframe_woop_corner(7, 0, 7, BLUE);
-        wireframe_woop_corner(7, 7, 0, RED);
-        wireframe_woop_corner(7, 7, 7, GREEN);
-        wireframe_woop_center(BLUE);
-        wireframe_woop_center(RED);
-        wireframe_woop_center(GREEN);
-        wireframe_woop_center(BLUE);
-    }
+    wireframe_woop_corner(0, 0, 0, RED);
+    wireframe_woop_corner(0, 0, 7, GREEN);
+    wireframe_woop_corner(0, 7, 0, BLUE);
+    wireframe_woop_corner(0, 7, 7, RED);
+    wireframe_woop_corner(7, 0, 0, GREEN);
+    wireframe_woop_corner(7, 0, 7, BLUE);
+    wireframe_woop_corner(7, 7, 0, RED);
+    wireframe_woop_corner(7, 7, 7, GREEN);
+    wireframe_woop_center(BLUE);
+    wireframe_woop_center(RED);
+    wireframe_woop_center(GREEN);
+    wireframe_woop_center(BLUE);
     fb_clear();
 }
