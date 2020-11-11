@@ -122,6 +122,8 @@ void effect_loop() {
 
 void init_effects() {
     effects = effect_list_new();
+    effects = effect_list_add(effects, effect_new("linespin", linespin, NULL));
+    effects = effect_list_add(effects, effect_new("sinelines", sinelines, NULL));
     effects = effect_list_add(effects, effect_new("fireworks", fireworks, NULL));
     effects = effect_list_add(effects, effect_new("ball", ball, NULL));
     effects = effect_list_add(effects, effect_new("shift_planes", shift_planes, NULL));

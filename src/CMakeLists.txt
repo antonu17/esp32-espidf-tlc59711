@@ -7,6 +7,7 @@ set(app_sources
 	"event_loop.c"
 	"spiffs.c"
 	"colors.c"
+	"draw.c"
 	"tlc59711.c"
 	"framebuffer.c"
 	"wifi.c"
@@ -23,10 +24,11 @@ set(app_sources
 	"effects/wireframes.c"
 	"effects/ripples.c"
 	"effects/sidewaves.c"
-	"effects/utils.c"
 	"effects/ball.c"
 	"effects/test.c"
 	"effects/fireworks.c"
+	"effects/sinelines.c"
+	"effects/linespin.c"
 )
 
 idf_component_register(SRCS ${app_sources}

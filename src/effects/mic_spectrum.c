@@ -132,7 +132,7 @@ void i2s_adc_task(void* arg) {
             data_f32[bin] = fmax(data_f32[bin], fabs(y1_cf[i]));
         }
         for (int i = 0; i < 8; i++) {
-            data_f32[i] *= positive_sampels_avg;
+            data_f32[i] *= positive_sampels_sum;
             data[i] = (uint8_t)data_f32[i];
         }
 
