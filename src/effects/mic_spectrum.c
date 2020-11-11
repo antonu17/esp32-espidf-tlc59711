@@ -24,7 +24,6 @@
 #define I2S_DI_IO (GPIO_NUM_15)
 
 TaskHandle_t i2s_adc_task_handle = NULL;
-static int running;
 
 void i2s_init() {
     esp_err_t err;
@@ -133,7 +132,7 @@ void i2s_adc_task(void* arg) {
             data_f32[bin] = fmax(data_f32[bin], fabs(y1_cf[i]));
         }
         for (int i = 0; i < 8; i++) {
-            data_f32[i] *= positive_sampels_sum;
+            data_f32[i] *= positive_sampels_avg;
             data[i] = (uint8_t)data_f32[i];
         }
 
@@ -173,25 +172,17 @@ void mic_spectrum_stop() {
     }
     i2s_deinit();
     ESP_ERROR_CHECK(esp_event_handler_unregister_with(event_loop, MIC_EVENTS, MIC_EVENT_FRAME_READY, mic_frame_ready_handler));
-    ESP_ERROR_CHECK(esp_event_handler_unregister_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, mic_spectrum_stop));
-    running = 0;
 }
 
-void mic_spectrum() {
+void mic_spectrum(effect_t* effect) {
     ESP_ERROR_CHECK(esp_event_handler_register_with(event_loop, MIC_EVENTS, MIC_EVENT_FRAME_READY, mic_frame_ready_handler, NULL));
-    ESP_ERROR_CHECK(esp_event_handler_register_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, mic_spectrum_stop, NULL));
-    running = 1;
 
     i2s_init();
     xTaskCreatePinnedToCore(i2s_adc_task, "i2s_adc_task", 1024 * 16, NULL, 1, &i2s_adc_task_handle, 1);
 
     fb_clear();
-    while (running) {
+    while (effect->running) {
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
     fb_clear();
-
-    ESP_LOGI(TAG, "notify effect_loop");
-    xTaskNotify(effect_loop_task_handle, 0, eNoAction);
-    vTaskDelay(portMAX_DELAY);
 }

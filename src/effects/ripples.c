@@ -10,25 +10,14 @@
 #define DELAY pdMS_TO_TICKS(180)
 #define STEP 10
 
-static int running;
-
-void ripples_stop() {
-    ESP_LOGI(TAG, "stop event received");
-    ESP_ERROR_CHECK(esp_event_handler_unregister_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, ripples_stop));
-    running = 0;
-}
-
-void ripples() {
+void ripples(effect_t *effect) {
     float distance, height, ripple_interval;
     int x, y;
     uint16_t i = 0;
     uint8_t step = STEP;
     uint8_t c = 150;
 
-    ESP_ERROR_CHECK(esp_event_handler_register_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, ripples_stop, NULL));
-    running = 1;
-
-    while (running) {
+    while (effect->running) {
         i++;
 
         fb_clear_draft();
@@ -48,8 +37,4 @@ void ripples() {
         }
         vTaskDelay(1);
     }
-
-    ESP_LOGI(TAG, "notify effect_loop");
-    xTaskNotify(effect_loop_task_handle, 0, eNoAction);
-    vTaskDelay(portMAX_DELAY);
 }

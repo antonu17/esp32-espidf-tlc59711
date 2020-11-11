@@ -9,24 +9,14 @@
 #define SPEED pdMS_TO_TICKS(60)
 #define DELAY pdMS_TO_TICKS(180)
 
-static int running;
-
-void sidewaves_stop() {
-    ESP_LOGI(TAG, "stop event received");
-    ESP_ERROR_CHECK(esp_event_handler_unregister_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, sidewaves_stop));
-    running = 0;
-}
-
-void sidewaves() {
-    ESP_ERROR_CHECK(esp_event_handler_register_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, sidewaves_stop, NULL));
-    running = 1;
+void sidewaves(effect_t *effect) {
     float origin_x, origin_y, distance, height, ripple_interval;
     int x, y;
     uint16_t i = 0;
 
     fb_clear();
 
-    while (running) {
+    while (effect->running) {
         i++;
         origin_x = 3.5 + sin((float)i / 500) * 4;
         origin_y = 3.5 + cos((float)i / 500) * 4;
@@ -45,8 +35,4 @@ void sidewaves() {
         vTaskDelay(1);
     }
     fb_clear();
-
-    ESP_LOGD(TAG, "notify effect_loop");
-    xTaskNotify(effect_loop_task_handle, 0, eNoAction);
-    vTaskDelay(portMAX_DELAY);
 }

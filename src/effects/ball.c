@@ -10,18 +10,7 @@
 #define DELAY pdMS_TO_TICKS(180)
 #define STEP 20
 
-static int running;
-
-void ball_stop() {
-    ESP_LOGI(TAG, "stop event received");
-    ESP_ERROR_CHECK(esp_event_handler_unregister_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, ball_stop));
-    running = 0;
-}
-
-void ball() {
-    ESP_ERROR_CHECK(esp_event_handler_register_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, ball_stop, NULL));
-    running = 1;
-
+void ball(effect_t *effect) {
     float origin_x, origin_y, origin_z, distance, diameter;
     uint8_t step = STEP;
     uint8_t c = 0;
@@ -37,7 +26,7 @@ void ball() {
     uint16_t i = 0;
 
     fb_clear();
-    while (running) {
+    while (effect->running) {
         i++;
         origin_x = 3.5 + sin((float)i / 50) * 2.5;
         origin_y = 3.5 + cos((float)i / 50) * 2.5;
@@ -68,8 +57,4 @@ void ball() {
         vTaskDelay(1);
     }
     fb_clear();
-
-    ESP_LOGD(TAG, "notify effect_loop");
-    xTaskNotify(effect_loop_task_handle, 0, eNoAction);
-    vTaskDelay(portMAX_DELAY);
 }

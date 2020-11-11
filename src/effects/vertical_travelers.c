@@ -10,14 +10,6 @@
 
 rgb_t on = {255, 255, 255};
 rgb_t off = {0, 0, 0};
-static int running;
-
-
-void vertical_travelers_stop() {
-    ESP_LOGI(TAG, "stop event received");
-    ESP_ERROR_CHECK(esp_event_handler_unregister_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, vertical_travelers_stop));
-    running = 0;
-}
 
 void send_pixel_up(uint8_t x, uint8_t y, TickType_t xTicksToDelay) {
     for (int i = 0; i < 7; i++) {
@@ -35,11 +27,8 @@ void send_pixel_down(uint8_t x, uint8_t y, TickType_t xTicksToDelay) {
     }
 }
 
-void vertical_travelers() {
+void vertical_travelers(effect_t *effect) {
     int x, y, last_x = 0, last_y = 0;
-
-    ESP_ERROR_CHECK(esp_event_handler_register_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, vertical_travelers_stop, NULL));
-    running = 1;
 
     fb_clear();
 
@@ -50,7 +39,7 @@ void vertical_travelers() {
         }
     }
 
-    while (running) {
+    while (effect->running) {
         x = rand() % 8;
         y = rand() % 8;
 
@@ -67,8 +56,4 @@ void vertical_travelers() {
         }
     }
     fb_clear();
-
-    ESP_LOGD(TAG, "notify effect_loop");
-    xTaskNotify(effect_loop_task_handle, 0, eNoAction);
-    vTaskDelay(portMAX_DELAY);
 }

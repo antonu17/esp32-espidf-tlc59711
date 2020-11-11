@@ -3,6 +3,7 @@
 
 set(app_sources
 	"main.c"
+	"effect_loop.c"
 	"event_loop.c"
 	"spiffs.c"
 	"colors.c"
@@ -12,7 +13,6 @@ set(app_sources
 	"http/http.c"
 	"http/rest_server.c"
 	"http/file_server.c"
-	"effects/effect_loop.c"
 	"effects/cube_color_wheel.c"
 	"effects/wave_color_wheel.c"
 	"effects/mic_spectrum.c"

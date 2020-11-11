@@ -7,22 +7,11 @@
 
 #define SPEED pdMS_TO_TICKS(100)
 
-static int running;
-
-void rain_stop() {
-    ESP_LOGI(TAG, "stop event received");
-    ESP_ERROR_CHECK(esp_event_handler_unregister_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, rain_stop));
-    running = 0;
-}
-
-void rain() {
+void rain(effect_t *effect) {
     rgb_t c = {255, 255, 255};
 
-    ESP_ERROR_CHECK(esp_event_handler_register_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, rain_stop, NULL));
-    running = 1;
-
     fb_clear();
-    while (running) {
+    while (effect->running) {
         int i;
         int rnd_x;
         int rnd_y;
@@ -39,8 +28,4 @@ void rain() {
         fb_shift(FB_AXIS_Z, FB_SHIFT_BACK);
     }
     fb_clear();
-
-    ESP_LOGD(TAG, "notify effect_loop");
-    xTaskNotify(effect_loop_task_handle, 0, eNoAction);
-    vTaskDelay(portMAX_DELAY);
 }

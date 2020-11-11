@@ -11,21 +11,11 @@
 #define SPEED pdMS_TO_TICKS(80)
 #define DELAY pdMS_TO_TICKS(800)
 
-static int running;
-
-void fireworks_stop() {
-    ESP_LOGI(TAG, "stop event received");
-    ESP_ERROR_CHECK(esp_event_handler_unregister_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, fireworks_stop));
-    running = 0;
-}
-
-void fireworks() {
-    ESP_ERROR_CHECK(esp_event_handler_register_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, fireworks_stop, NULL));
-    running = 1;
+void fireworks(effect_t *effect) {
     uint8_t n = 50;
 
     fb_clear();
-    while (running) {
+    while (effect->running) {
         fb_clear();
 
         uint8_t f, e;
@@ -95,8 +85,4 @@ void fireworks() {
         }
     }
     fb_clear();
-
-    ESP_LOGD(TAG, "notify effect_loop");
-    xTaskNotify(effect_loop_task_handle, 0, eNoAction);
-    vTaskDelay(portMAX_DELAY);
 }
