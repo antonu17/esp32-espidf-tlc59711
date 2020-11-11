@@ -67,9 +67,9 @@ effect_list_t *effect_list_add(effect_list_t *effects, effect_t *effect) {
 void effect_start(void *arg) {
     effect_t *effect = (effect_t *)arg;
     effect->function(effect);
+    ESP_ERROR_CHECK(esp_event_handler_unregister_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, effect_stop));
     xTaskNotify(effect_loop_task_handle, 0, eNoAction);
     ESP_LOGD(effect->name, "notification sent (%p)", effect);
-    ESP_ERROR_CHECK(esp_event_handler_unregister_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, effect_stop));
     vTaskDelay(portMAX_DELAY);
 }
 

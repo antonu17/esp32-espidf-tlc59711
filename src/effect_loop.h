@@ -36,9 +36,6 @@ void effect_free(effect_t *effect);
 void effect_run(effect_t *effect);
 void init_effects();
 
-extern esp_event_loop_handle_t effects_event_loop;
-extern TaskHandle_t effect_loop_task_handle;
-
 #ifdef __cplusplus
 }
 #endif
