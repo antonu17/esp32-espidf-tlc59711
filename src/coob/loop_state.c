@@ -83,11 +83,12 @@ static void effect_run(effect_t *effect) {
 static void effect_loop() {
     // effect_run(effect_new("test", test, effect_free));
     for (;;) {
-        if (!effect_list->len) {
+        if (0 == effect_list_length(effect_list)) {
             vTaskDelay(10);
+            continue;
         }
-        for (int i = 0; i < effect_list->len; i++) {
-            effect_run(effect_list->effect[i]);
+        for (effect_t *e = effect_list_first(effect_list); !effect_list_done(effect_list, e); e = effect_list_next(effect_list, e)) {
+            effect_run(e);
         }
     }
 }
