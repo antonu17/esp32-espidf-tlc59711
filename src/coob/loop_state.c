@@ -17,7 +17,9 @@ static void start_loop_mode();
 static void stop_loop_mode();
 static void effect_stop(void *handler_arg, esp_event_base_t base, int32_t id, void *event_data);
 
-static TaskHandle_t effect_loop_task_handle;
+static TaskHandle_t effect_loop_task_handle = NULL;
+static TaskHandle_t current_effect_task_handle = NULL;
+static int running = 0;
 
 static void start_single(coob_state_t state) {
     stop_loop_mode();
@@ -49,13 +51,16 @@ static void effect_stop(void *handler_arg, esp_event_base_t base, int32_t id, vo
 }
 
 static void effect_run(effect_t *effect) {
-    TaskHandle_t handle;
+    if (!running) {
+        vTaskDelay(portMAX_DELAY);
+    }
+
     int effect_finished = 0;
     ESP_LOGI(effect->name, "start effect (%p)", effect);
     ESP_ERROR_CHECK(esp_event_handler_register_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, effect_stop, effect));
     effect->running = 1;
 
-    xTaskCreatePinnedToCore(effect_start, effect->name, 10000, effect, 1, &handle, 0);
+    xTaskCreatePinnedToCore(effect_start, effect->name, 10000, effect, 1, &current_effect_task_handle, 0);
 
     effect_finished = 0;
     if (xTaskNotifyWait(0, 0, NULL, EFFECT_TIMEOUT) == pdPASS) {
@@ -71,8 +76,10 @@ static void effect_run(effect_t *effect) {
         ESP_LOGD(effect->name, "notification received (%p)", effect);
     }
 
-    vTaskDelete(handle);
-    ESP_LOGD(effect->name, "effect task deleted (%p)", effect);
+    if (current_effect_task_handle) {
+        vTaskDelete(current_effect_task_handle);
+        ESP_LOGD(effect->name, "effect task deleted (%p)", effect);
+    }
 
     if (effect->stop_hook) {
         ESP_LOGD(effect->name, "stop hook: %s\t\t(%p)", effect->name, effect);
@@ -94,11 +101,19 @@ static void effect_loop() {
 }
 
 static void start_loop_mode() {
+    running = 1;
     xTaskCreatePinnedToCore(effect_loop, "effect_loop", 2048, NULL, 2, &effect_loop_task_handle, 0);
 }
 
 static void stop_loop_mode() {
+    running = 0;
+    if (current_effect_task_handle) {
+        vTaskDelete(current_effect_task_handle);
+        ESP_ERROR_CHECK(esp_event_handler_unregister_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, effect_stop));
+        ESP_LOGD(__FILE__, "effect task terminated");
+    }
     if (effect_loop_task_handle) {
         vTaskDelete(effect_loop_task_handle);
+        ESP_LOGD(__FILE__, "effect loop task terminated");
     }
 }
