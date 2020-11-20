@@ -3,6 +3,7 @@
 
 set(app_sources
 	"main.c"
+	"effect_list.c"
 	"effect_loop.c"
 	"event_loop.c"
 	"spiffs.c"
