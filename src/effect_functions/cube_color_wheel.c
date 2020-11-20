@@ -2,7 +2,7 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
-#include "effects.h"
+#include "effect_functions.h"
 
 #define TAG __FILE__
 

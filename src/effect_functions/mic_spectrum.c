@@ -6,7 +6,7 @@
 #include <freertos/task.h>
 #include <math.h>
 
-#include "effects.h"
+#include "effect_functions.h"
 #include "esp_dsp.h"
 
 #define TAG __FILE__

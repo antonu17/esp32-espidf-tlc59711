@@ -1,4 +1,4 @@
-#include "effects.h"
+#include "effect_functions.h"
 
 #define DELAY pdMS_TO_TICKS(500)
 

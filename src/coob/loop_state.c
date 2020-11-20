@@ -5,7 +5,8 @@
 #include <freertos/task.h>
 
 #include "coob_state.h"
-#include "effects.h"
+#include "effect_functions.h"
+#include "effect_list.h"
 
 /* Possible transition to the following state: */
 #include "solo_state.h"

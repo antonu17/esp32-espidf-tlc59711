@@ -1,7 +1,7 @@
 #include <esp_event.h>
 #include <esp_log.h>
 
-#include "effects.h"
+#include "effect_functions.h"
 
 #define TAG __FILE__
 #define DELAY pdMS_TO_TICKS(300)

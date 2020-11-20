@@ -3,6 +3,7 @@
 
 set(app_sources
 	"main.c"
+	"effect.c"
 	"effect_list.c"
 	"event_loop.c"
 	"spiffs.c"
@@ -19,26 +20,26 @@ set(app_sources
 	"http/http.c"
 	"http/rest_server.c"
 	"http/file_server.c"
-	"effects/cube_color_wheel.c"
-	"effects/wave_color_wheel.c"
-	"effects/mic_spectrum.c"
-	"effects/shift_planes.c"
-	"effects/rain.c"
-	"effects/vertical_travelers.c"
-	"effects/shift_suspend.c"
-	"effects/wireframes.c"
-	"effects/ripples.c"
-	"effects/sidewaves.c"
-	"effects/ball.c"
-	"effects/test.c"
-	"effects/fireworks.c"
-	"effects/sinelines.c"
-	"effects/linespin.c"
+	"effect_functions/cube_color_wheel.c"
+	"effect_functions/wave_color_wheel.c"
+	"effect_functions/mic_spectrum.c"
+	"effect_functions/shift_planes.c"
+	"effect_functions/rain.c"
+	"effect_functions/vertical_travelers.c"
+	"effect_functions/shift_suspend.c"
+	"effect_functions/wireframes.c"
+	"effect_functions/ripples.c"
+	"effect_functions/sidewaves.c"
+	"effect_functions/ball.c"
+	"effect_functions/test.c"
+	"effect_functions/fireworks.c"
+	"effect_functions/sinelines.c"
+	"effect_functions/linespin.c"
 )
 
 set(includedirs
 	"coob/"
-	"effects//"
+	"effect_functions/"
 )
 
 idf_component_register(SRCS ${app_sources}
