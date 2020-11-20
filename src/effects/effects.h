@@ -2,7 +2,7 @@
 #define EFFECTS_H
 
 #include "draw.h"
-#include "effect_loop.h"
+#include "effect_list.h"
 #include "event_loop.h"
 
 void cube_color_wheel();

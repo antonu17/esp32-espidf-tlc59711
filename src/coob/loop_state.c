@@ -1,24 +1,38 @@
-#define LOG_LOCAL_LEVEL ESP_LOG_WARN
-
-#include "effect_loop.h"
+#include "loop_state.h"
 
 #include <esp_log.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
-#include "effect_list.h"
-#include "effects/effects.h"
-#include "event_loop.h"
+#include "coob_state.h"
+#include "effects.h"
+
+/* Possible transition to the following state: */
+#include "solo_state.h"
 
 #define EFFECT_TIMEOUT pdMS_TO_TICKS(15000)
 
-void effect_start(void *arg);
-void effect_stop(void *handler_arg, esp_event_base_t base, int32_t id, void *event_data);
+static void start_loop_mode();
+static void stop_loop_mode();
+static void effect_stop(void *handler_arg, esp_event_base_t base, int32_t id, void *event_data);
 
-TaskHandle_t effect_loop_task_handle;
-effect_list_t *effects;
+static TaskHandle_t effect_loop_task_handle;
 
-void effect_start(void *arg) {
+static void start_single(coob_state_t state) {
+    stop_loop_mode();
+
+    transition_to_solo(state);
+}
+
+void transition_to_loop(coob_state_t state) {
+    start_loop_mode();
+
+    default_state(state);
+    state->single = start_single;
+    ESP_LOGD(__FILE__, "switched to loop mode");
+}
+
+static void effect_start(void *arg) {
     effect_t *effect = (effect_t *)arg;
     effect->function(effect);
     ESP_ERROR_CHECK(esp_event_handler_unregister_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, effect_stop));
@@ -27,13 +41,13 @@ void effect_start(void *arg) {
     vTaskDelay(portMAX_DELAY);
 }
 
-void effect_stop(void *handler_arg, esp_event_base_t base, int32_t id, void *event_data) {
+static void effect_stop(void *handler_arg, esp_event_base_t base, int32_t id, void *event_data) {
     effect_t *effect = (effect_t *)handler_arg;
     ESP_LOGD(effect->name, "stop event received (%p)", effect);
     effect->running = 0;
 }
 
-void effect_run(effect_t *effect) {
+static void effect_run(effect_t *effect) {
     TaskHandle_t handle;
     int effect_finished = 0;
     ESP_LOGI(effect->name, "start effect (%p)", effect);
@@ -65,20 +79,24 @@ void effect_run(effect_t *effect) {
     }
 }
 
-void effect_loop() {
-    effect_run(effect_new("test", test, effect_free));
+static void effect_loop() {
+    // effect_run(effect_new("test", test, effect_free));
     for (;;) {
-        if (!effects->len) {
+        if (!effect_list->len) {
             vTaskDelay(10);
         }
-        for (int i = 0; i < effects->len; i++) {
-            effect_run(effects->effect[i]);
+        for (int i = 0; i < effect_list->len; i++) {
+            effect_run(effect_list->effect[i]);
         }
     }
 }
 
-void init_effects() {
-    effects = effect_list_new();
-    effects = effect_list_add(effects, effect_list->effect[0]);
+static void start_loop_mode() {
     xTaskCreatePinnedToCore(effect_loop, "effect_loop", 2048, NULL, 2, &effect_loop_task_handle, 0);
+}
+
+static void stop_loop_mode() {
+    if (effect_loop_task_handle) {
+        vTaskDelete(effect_loop_task_handle);
+    }
 }

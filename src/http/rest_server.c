@@ -7,6 +7,7 @@
    CONDITIONS OF ANY KIND, either express or implied.
 */
 #include <cJSON.h>
+#include <coob.h>
 #include <esp_http_server.h>
 #include <esp_log.h>
 #include <esp_system.h>
@@ -14,6 +15,7 @@
 #include <fcntl.h>
 #include <string.h>
 
+#include "stats.h"
 #include "tlc59711.h"
 
 static const char *REST_TAG = "esp-rest";
@@ -136,6 +138,51 @@ static esp_err_t light_brightness_post_handler(httpd_req_t *req) {
     return ESP_OK;
 }
 
+/* Switch cube mode */
+static esp_err_t cube_mode_switch_handler(httpd_req_t *req) {
+    int total_len = req->content_len;
+    int cur_len = 0;
+    char *buf = ((rest_server_context_t *)(req->user_ctx))->scratch;
+    int received = 0;
+    coob_t coob = NULL;
+
+    if (total_len >= SCRATCH_BUFSIZE) {
+        /* Respond with 500 Internal Server Error */
+        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "content too long");
+        return ESP_FAIL;
+    }
+    while (cur_len < total_len) {
+        received = httpd_req_recv(req, buf + cur_len, total_len);
+        if (received <= 0) {
+            /* Respond with 500 Internal Server Error */
+            httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to post control value");
+            return ESP_FAIL;
+        }
+        cur_len += received;
+    }
+    buf[total_len] = '\0';
+
+    cJSON *root = cJSON_Parse(buf);
+    int mode = cJSON_GetObjectItem(root, "mode")->valueint;
+    ESP_LOGI(REST_TAG, "Switching to mode: %d", mode);
+
+    coob = coob_get_instance();
+    switch (mode) {
+        case 0:
+            coob_mode_loop(coob);
+            break;
+        case 1:
+            coob_mode_single(coob);
+            break;
+        default:
+            ESP_LOGI(REST_TAG, "Wrong mode provided: %d", mode);
+            break;
+    }
+    cJSON_Delete(root);
+    httpd_resp_sendstr(req, "Post control value successfully");
+    return ESP_OK;
+}
+
 /* Simple handler for getting system handler */
 static esp_err_t system_info_get_handler(httpd_req_t *req) {
     httpd_resp_set_type(req, "application/json");
@@ -153,9 +200,11 @@ static esp_err_t system_info_get_handler(httpd_req_t *req) {
 
 /* Simple handler for getting temperature data */
 static esp_err_t temperature_data_get_handler(httpd_req_t *req) {
+    utilization_t *st = stats_get();
     httpd_resp_set_type(req, "application/json");
     cJSON *root = cJSON_CreateObject();
-    cJSON_AddNumberToObject(root, "raw", esp_random() % 20);
+    cJSON_AddNumberToObject(root, "cpu0", st->core[0]->utilization);
+    cJSON_AddNumberToObject(root, "cpu1", st->core[1]->utilization);
     const char *sys_info = cJSON_Print(root);
     httpd_resp_sendstr(req, sys_info);
     free((void *)sys_info);
@@ -177,6 +226,15 @@ esp_err_t start_rest_server(const char *base_path) {
 
     ESP_LOGI(REST_TAG, "Starting HTTP Server");
     REST_CHECK(httpd_start(&server, &config) == ESP_OK, "Start server failed", err_start);
+
+    /* URI handler for switching mode */
+    httpd_uri_t cube_mode_switch_uri = {
+        .uri = "/api/v1/mode",
+        .method = HTTP_POST,
+        .handler = cube_mode_switch_handler,
+        .user_ctx = rest_context,
+    };
+    httpd_register_uri_handler(server, &cube_mode_switch_uri);
 
     /* URI handler for fetching system info */
     httpd_uri_t system_info_get_uri = {

@@ -1,3 +1,4 @@
+#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 #include "effect_list.h"
 
 #include <esp_log.h>
@@ -7,7 +8,7 @@
 effect_list_t *effect_list;
 
 effect_t *effect_new(char *name, effect_function_t function, stop_hook_t stop_hook) {
-    effect_t *effect = malloc(sizeof(effect_t));
+    effect_t *effect = malloc(sizeof *effect);
     if (effect) {
         effect->name = name;
         effect->function = function;
@@ -23,7 +24,7 @@ void effect_free(effect_t *effect) {
 }
 
 effect_list_t *effect_list_new() {
-    effect_list_t *list = malloc(sizeof(effect_list_t));
+    effect_list_t *list = malloc(sizeof *list);
     list->len = 0;
     list->cap = 10;
     list->effect = malloc(10 * sizeof(effect_t));
@@ -37,6 +38,7 @@ effect_list_t *effect_list_add(effect_list_t *effects, effect_t *effect) {
     unsigned int cap = effects->cap;
     unsigned int len = effects->len;
     if (len == cap) {
+        ESP_LOGD(__FILE__, "increase underlaying array");
         cap *= 2;
         effect_t *src = (effect_t *)effects->effect;
         effect_t *dst = malloc(cap * sizeof(effect_t));

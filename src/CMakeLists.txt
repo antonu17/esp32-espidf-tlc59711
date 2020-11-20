@@ -4,7 +4,6 @@
 set(app_sources
 	"main.c"
 	"effect_list.c"
-	"effect_loop.c"
 	"event_loop.c"
 	"spiffs.c"
 	"colors.c"
@@ -13,6 +12,10 @@ set(app_sources
 	"framebuffer.c"
 	"wifi.c"
 	"stats.c"
+	"coob/coob_state.c"
+	"coob/loop_state.c"
+	"coob/solo_state.c"
+	"coob/coob.c"
 	"http/http.c"
 	"http/rest_server.c"
 	"http/file_server.c"
@@ -33,5 +36,11 @@ set(app_sources
 	"effects/linespin.c"
 )
 
+set(includedirs
+	"coob/"
+	"effects//"
+)
+
 idf_component_register(SRCS ${app_sources}
+					INCLUDE_DIRS ${includedirs}
 					REQUIRES esp-dsp)
