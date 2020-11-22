@@ -172,7 +172,7 @@ static esp_err_t cube_mode_switch_handler(httpd_req_t *req) {
             coob_mode_loop(coob);
             break;
         case 1:
-            coob_mode_single(coob);
+            coob_mode_solo(coob);
             break;
         default:
             ESP_LOGI(REST_TAG, "Wrong mode provided: %d", mode);

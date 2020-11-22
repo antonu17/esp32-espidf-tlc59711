@@ -16,6 +16,7 @@ static coob_t coob_new(void) {
     coob_t instance = malloc(sizeof *instance);
     if (NULL != instance) {
         /* Specify the initial state. */
+        instance->state.current_effect = effect_list_first(effect_list);
         transition_to_loop(&instance->state);
     }
     return instance;
@@ -36,8 +37,8 @@ void coob_mode_loop(coob_t instance) {
     instance->state.loop(&instance->state);
 }
 
-void coob_mode_single(coob_t instance) {
-    instance->state.single(&instance->state);
+void coob_mode_solo(coob_t instance) {
+    instance->state.solo(&instance->state);
 }
 
 void init_coob() {
