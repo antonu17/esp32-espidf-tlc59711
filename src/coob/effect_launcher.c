@@ -69,11 +69,11 @@ void effect_terminate(effect_t *effect) {
         vTaskDelete(current_effect_task_handle);
         current_effect_task_handle = NULL;
         ESP_LOGD(__FILE__, "effect task terminated: %s (%p)", effect->name, effect);
-    }
 
-    if (effect->stop_hook) {
-        ESP_LOGD(__FILE__, "stop hook: %s (%p)", effect->name, effect);
-        effect->stop_hook(effect);
+        if (effect->stop_hook) {
+            ESP_LOGD(__FILE__, "stop hook: %s (%p)", effect->name, effect);
+            effect->stop_hook(effect);
+        }
     }
 
     ESP_LOGD(__FILE__, "effect terminated: %s (%p)", effect->name, effect);
