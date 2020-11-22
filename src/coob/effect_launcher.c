@@ -38,7 +38,7 @@ void effect_run(effect_t *effect, TickType_t timeout) {
         ESP_LOGD(__FILE__, "timeout semaphore created");
     }
 
-    ESP_LOGI(effect->name, "start effect (%p)", effect);
+    ESP_LOGD(__FILE__, "start effect %s (%p)", effect->name, effect);
     ESP_ERROR_CHECK(esp_event_handler_register_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, effect_stop_event_handler, effect));
     effect->running = 1;
 
