@@ -6,12 +6,12 @@
 
 #include "event_loop.h"
 
-void effect_stop(void *handler_arg, esp_event_base_t base, int32_t id, void *event_data);
+void effect_stop_event_handler(void *handler_arg, esp_event_base_t base, int32_t id, void *event_data);
 
 static TaskHandle_t current_effect_task_handle = NULL;
 static SemaphoreHandle_t timeout_effect_task = NULL;
 
-void effect_start(void *arg) {
+static void current_effect_task(void *arg) {
     effect_t *effect = (effect_t *)arg;
     effect->function(effect);
     xSemaphoreGive(timeout_effect_task);
@@ -19,10 +19,10 @@ void effect_start(void *arg) {
     vTaskDelay(portMAX_DELAY);
 }
 
-void effect_stop(void *handler_arg, esp_event_base_t base, int32_t id, void *event_data) {
+void effect_stop_event_handler(void *handler_arg, esp_event_base_t base, int32_t id, void *event_data) {
     effect_t *effect = (effect_t *)handler_arg;
     ESP_LOGD(effect->name, "stop event received (%p)", effect);
-    ESP_ERROR_CHECK(esp_event_handler_unregister_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, effect_stop));
+    ESP_ERROR_CHECK(esp_event_handler_unregister_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, effect_stop_event_handler));
     effect->running = 0;
 }
 
@@ -39,15 +39,15 @@ void effect_run(effect_t *effect, TickType_t timeout) {
     }
 
     ESP_LOGI(effect->name, "start effect (%p)", effect);
-    ESP_ERROR_CHECK(esp_event_handler_register_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, effect_stop, effect));
+    ESP_ERROR_CHECK(esp_event_handler_register_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, effect_stop_event_handler, effect));
     effect->running = 1;
 
-    xTaskCreatePinnedToCore(effect_start, effect->name, 10000, effect, 1, &current_effect_task_handle, 0);
+    xTaskCreatePinnedToCore(current_effect_task, effect->name, 10000, effect, 1, &current_effect_task_handle, 0);
     effect_finished = 0;
 
     if (pdTRUE == xSemaphoreTake(timeout_effect_task, timeout)) {
         ESP_LOGD(effect->name, "effect finished before timeout (%p)", effect);
-        ESP_ERROR_CHECK(esp_event_handler_unregister_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, effect_stop));
+        ESP_ERROR_CHECK(esp_event_handler_unregister_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, effect_stop_event_handler));
         effect_finished = 1;
     }
 
@@ -71,7 +71,7 @@ void effect_run(effect_t *effect, TickType_t timeout) {
 }
 
 void effect_terminate(effect_t *effect) {
-    ESP_ERROR_CHECK(esp_event_handler_unregister_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, effect_stop));
+    ESP_ERROR_CHECK(esp_event_handler_unregister_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, effect_stop_event_handler));
     if (NULL != current_effect_task_handle) {
         vTaskDelete(current_effect_task_handle);
         current_effect_task_handle = NULL;
