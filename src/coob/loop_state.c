@@ -13,7 +13,7 @@
 #include "solo_state.h"
 #include "switching_state.h"
 
-#define EFFECT_TIMEOUT pdMS_TO_TICKS(3000)
+#define EFFECT_TIMEOUT pdMS_TO_TICKS(15000)
 
 static void start_loop_mode(coob_state_t state);
 static void stop_loop_mode();
