@@ -15,13 +15,13 @@ static void current_effect_task(void *arg) {
     effect_t *effect = (effect_t *)arg;
     effect->function(effect);
     xSemaphoreGive(timeout_effect_task);
-    ESP_LOGD(effect->name, "timeout semaphore given (%p)", effect);
+    ESP_LOGD(__FILE__, "timeout semaphore given: %s (%p)", effect->name, effect);
     vTaskDelay(portMAX_DELAY);
 }
 
 void effect_stop_event_handler(void *handler_arg, esp_event_base_t base, int32_t id, void *event_data) {
     effect_t *effect = (effect_t *)handler_arg;
-    ESP_LOGD(effect->name, "stop event received (%p)", effect);
+    ESP_LOGD(__FILE__, "stop event received: %s (%p)", effect->name, effect);
     ESP_ERROR_CHECK(esp_event_handler_unregister_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, effect_stop_event_handler));
     effect->running = 0;
 }
@@ -46,41 +46,35 @@ void effect_run(effect_t *effect, TickType_t timeout) {
     effect_finished = 0;
 
     if (pdTRUE == xSemaphoreTake(timeout_effect_task, timeout)) {
-        ESP_LOGD(effect->name, "effect finished before timeout (%p)", effect);
-        ESP_ERROR_CHECK(esp_event_handler_unregister_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, effect_stop_event_handler));
+        ESP_LOGD(__FILE__, "effect finished before timeout: %s (%p)", effect->name, effect);
         effect_finished = 1;
     }
 
     if (!effect_finished) {
         ESP_ERROR_CHECK(esp_event_post_to(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, NULL, 0, portMAX_DELAY));
-        ESP_LOGD(effect->name, "timeout effect, stop event posted (%p)", effect);
+        ESP_LOGD(__FILE__, "timeout effect, stop event posted: %s (%p)", effect->name, effect);
         xSemaphoreTake(timeout_effect_task, portMAX_DELAY);
-        ESP_LOGD(effect->name, "timeout_effect_task taken (%p)", effect);
+        ESP_LOGD(__FILE__, "timeout semaphore taken: %s (%p)", effect->name, effect);
     }
 
-    if (current_effect_task_handle) {
-        vTaskDelete(current_effect_task_handle);
-        current_effect_task_handle = NULL;
-        ESP_LOGD(effect->name, "effect task deleted (%p)", effect);
-    }
-
-    if (effect->stop_hook) {
-        ESP_LOGD(effect->name, "stop hook: %s\t\t(%p)", effect->name, effect);
-        effect->stop_hook(effect);
+    if (NULL != current_effect_task_handle) {
+        effect_terminate(effect);
     }
 }
 
 void effect_terminate(effect_t *effect) {
     ESP_ERROR_CHECK(esp_event_handler_unregister_with(event_loop, EFFECT_EVENTS, EFFECT_EVENT_STOP, effect_stop_event_handler));
+
     if (NULL != current_effect_task_handle) {
         vTaskDelete(current_effect_task_handle);
         current_effect_task_handle = NULL;
-
-        if (effect->stop_hook) {
-            ESP_LOGD(effect->name, "stop hook: %s\t\t(%p)", effect->name, effect);
-            effect->stop_hook(effect);
-        }
-        ESP_LOGD(__FILE__, "effect task terminated");
+        ESP_LOGD(__FILE__, "effect task terminated: %s (%p)", effect->name, effect);
     }
-    ESP_LOGD(__FILE__, "effect terminated");
+
+    if (effect->stop_hook) {
+        ESP_LOGD(__FILE__, "stop hook: %s (%p)", effect->name, effect);
+        effect->stop_hook(effect);
+    }
+
+    ESP_LOGD(__FILE__, "effect terminated: %s (%p)", effect->name, effect);
 }
