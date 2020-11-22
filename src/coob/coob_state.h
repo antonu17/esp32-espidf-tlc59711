@@ -6,14 +6,15 @@
 
 typedef struct coob_state* coob_state_t;
 
-typedef void (*effect_loop_func_t)(coob_state_t);
-typedef void (*effect_solo_func_t)(coob_state_t);
+typedef void (*switch_mode_func_t)(coob_state_t);
+typedef void (*switch_effect_func_t)(coob_state_t, int i);
 
 struct coob_state {
     char* name;
     effect_t *current_effect;
-    effect_loop_func_t loop;
-    effect_solo_func_t solo;
+    switch_mode_func_t loop;
+    switch_mode_func_t solo;
+    switch_effect_func_t switch_effect;
 };
 
 void default_state(coob_state_t state);

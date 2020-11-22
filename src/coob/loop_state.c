@@ -11,23 +11,36 @@
 
 /* Possible transition to the following state: */
 #include "solo_state.h"
+#include "switching_state.h"
 
-#define EFFECT_TIMEOUT pdMS_TO_TICKS(15000)
+#define EFFECT_TIMEOUT pdMS_TO_TICKS(3000)
 
 static void start_loop_mode(coob_state_t state);
 static void stop_loop_mode();
-static void effect_loop();
 
-static int running = 0;
+static TaskHandle_t task = NULL;
 
 static void start_solo(coob_state_t state) {
-    stop_loop_mode();
+    stop_loop_mode(state);
 
     transition_to_solo(state);
 }
 
+static void switch_effect(coob_state_t state) {
+    effect_t *next_effect = effect_list_next(effect_list, state->current_effect);
+    if (NULL == next_effect) {
+        next_effect = effect_list_first(effect_list);
+    }
+    ESP_LOGD(__FILE__, "next effect is: %s", next_effect->name);
+
+    stop_loop_mode(state);
+    transition_to_switching(state, next_effect, transition_to_loop);
+    vTaskDelete(NULL);
+}
+
 void transition_to_loop(coob_state_t state) {
-    start_loop_mode(state);
+    xTaskCreatePinnedToCore(start_loop_mode, "start_loop_mode", 4096, state, 2, &task, 0);
+    ESP_LOGD(__FILE__, "start_loop_mode task started: %p", task);
 
     default_state(state);
     state->name = "loop";
@@ -36,35 +49,26 @@ void transition_to_loop(coob_state_t state) {
 }
 
 static void start_loop_mode(coob_state_t state) {
-    running = 1;
-    xTaskCreatePinnedToCore(effect_loop, "effect_loop", 2048, NULL, 2, &effect_launcher_task_handle, 0);
+    if (0 == effect_list_length(effect_list)) {
+        ESP_LOGE(__FILE__, "effect_list is empty");
+        vTaskDelay(portMAX_DELAY);
+    }
+    if (NULL == state->current_effect) {
+        ESP_LOGE(__FILE__, "state->current_effect is NULL");
+        vTaskDelay(portMAX_DELAY);
+    }
 
+    effect_run(state->current_effect, EFFECT_TIMEOUT);
+    xTaskCreatePinnedToCore(switch_effect, "switch_effect", 4096, state, 2, NULL, 0);
+    vTaskDelay(portMAX_DELAY);
 }
 
-static void stop_loop_mode() {
-    running = 0;
-    if (current_effect_task_handle) {
-        vTaskDelete(current_effect_task_handle);
-        ESP_LOGD(__FILE__, "effect task terminated");
+static void stop_loop_mode(coob_state_t state) {
+    if (task) {
+        ESP_LOGD(__FILE__, "terminating loop mode task: %p", task);
+        vTaskDelete(task);
+        task = NULL;
     }
-    if (effect_launcher_task_handle) {
-        vTaskDelete(effect_launcher_task_handle);
-        ESP_LOGD(__FILE__, "effect loop task terminated");
-    }
-}
-
-static void effect_loop() {
-    // effect_run(effect_new("test", test, effect_free));
-    for (;;) {
-        if (0 == effect_list_length(effect_list)) {
-            vTaskDelay(10);
-            continue;
-        }
-        for (effect_t *e = effect_list_first(effect_list); !effect_list_done(effect_list, e); e = effect_list_next(effect_list, e)) {
-            if (!running) {
-                vTaskDelay(portMAX_DELAY);
-            }
-            effect_run(e, EFFECT_TIMEOUT);
-        }
-    }
+    effect_terminate(state->current_effect);
+    ESP_LOGD(__FILE__, "stopped loop mode");
 }

@@ -79,6 +79,9 @@ effect_t *effect_list_next(effect_list_t list, effect_t *e) {
     list_node_t *current = head;
     while (current != NULL) {
         if (e == current->effect) {
+            if (NULL == current->next) {
+                return NULL;
+            }
             return current->next->effect;
         }
         current = current->next;
@@ -100,6 +103,24 @@ int effect_list_length(effect_list_t list) {
         current = current->next;
     }
     return len;
+}
+
+effect_t *effect_list_get_by_idx(effect_list_t list, int idx) {
+    list_node_t *head = list->head;
+    if (NULL == head) {
+        return NULL;
+    }
+
+    if (idx >= effect_list_length(list)) {
+        return NULL;
+    }
+
+    list_node_t *current = list->head;
+    for (int i = 0; i < idx; i++) {
+        current = current->next;
+    }
+
+    return current->effect;
 }
 
 void init_effect_list() {

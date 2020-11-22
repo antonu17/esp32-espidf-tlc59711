@@ -6,9 +6,7 @@
 
 #include "effect.h"
 
-extern TaskHandle_t effect_launcher_task_handle;
-extern TaskHandle_t current_effect_task_handle;
-
 void effect_run(effect_t *effect, TickType_t timeout);
+void effect_terminate(effect_t *effect);
 
 #endif  // EFFECT_LAUNCHER_H

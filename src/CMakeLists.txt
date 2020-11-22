@@ -16,6 +16,7 @@ set(app_sources
 	"coob/coob_state.c"
 	"coob/loop_state.c"
 	"coob/solo_state.c"
+	"coob/switching_state.c"
 	"coob/coob.c"
 	"coob/effect_launcher.c"
 	"http/http.c"

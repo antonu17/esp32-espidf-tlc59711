@@ -5,60 +5,61 @@
 #include <freertos/task.h>
 
 #include "coob_state.h"
-
-/* Possible transition to the following state: */
 #include "effect_launcher.h"
 #include "effect_list.h"
+
+/* Possible transition to the following state: */
 #include "loop_state.h"
+#include "switching_state.h"
 
 static void start_solo_mode();
 static void stop_solo_mode();
-static void effect_solo();
 
-static int running = 0;
+static TaskHandle_t task = NULL;
 
 static void start_loop(coob_state_t state) {
-    stop_solo_mode();
+    stop_solo_mode(state);
 
     transition_to_loop(state);
 }
 
+static void switch_effect(coob_state_t state, int i) {
+    effect_t *e = NULL;
+    if (i >= effect_list_length(effect_list)) {
+        ESP_LOGD(__FILE__, "effect index is out of bounds: %d", i);
+        return;
+    }
+    e = effect_list_get_by_idx(effect_list, i);
+    stop_solo_mode(state);
+    transition_to_switching(state, e, transition_to_solo);
+}
+
 void transition_to_solo(coob_state_t state) {
-    start_solo_mode();
+    xTaskCreatePinnedToCore(start_solo_mode, "start_solo_mode", 4096, state, 2, &task, 0);
 
     default_state(state);
     state->name = "solo";
     state->loop = start_loop;
+    state->switch_effect = switch_effect;
     ESP_LOGD(__FILE__, "switched to solo mode");
 }
 
-static void start_solo_mode() {
-    running = 1;
-    xTaskCreatePinnedToCore(effect_solo, "effect_solo", 2048, NULL, 2, &effect_launcher_task_handle, 0);
-}
-
-static void stop_solo_mode() {
-    running = 0;
-    if (current_effect_task_handle) {
-        vTaskDelete(current_effect_task_handle);
-        ESP_LOGD(__FILE__, "effect task terminated");
-    }
-    if (effect_launcher_task_handle) {
-        vTaskDelete(effect_launcher_task_handle);
-        ESP_LOGD(__FILE__, "effect loop task terminated");
-    }
-}
-
-static void effect_solo() {
-    // effect_run(effect_new("test", test, effect_free));
+static void start_solo_mode(coob_state_t state) {
     for (;;) {
-        if (0 == effect_list_length(effect_list)) {
-            vTaskDelay(10);
-            continue;
-        }
-        if (!running) {
+        if (NULL == state->current_effect) {
+            ESP_LOGE(__FILE__, "state->current_effect is NULL");
             vTaskDelay(portMAX_DELAY);
         }
-        effect_run(effect_list_first(effect_list), portMAX_DELAY);
+        effect_run(state->current_effect, portMAX_DELAY);
     }
+}
+
+static void stop_solo_mode(coob_state_t state) {
+    if (task) {
+        ESP_LOGD(__FILE__, "terminating solo mode task: %p", task);
+        vTaskDelete(task);
+        task = NULL;
+    }
+    effect_terminate(state->current_effect);
+    ESP_LOGD(__FILE__, "stopped solo mode");
 }

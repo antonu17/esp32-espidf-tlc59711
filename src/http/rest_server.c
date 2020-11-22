@@ -163,8 +163,15 @@ static esp_err_t cube_mode_switch_handler(httpd_req_t *req) {
     buf[total_len] = '\0';
 
     cJSON *root = cJSON_Parse(buf);
-    int mode = cJSON_GetObjectItem(root, "mode")->valueint;
-    ESP_LOGI(REST_TAG, "Switching to mode: %d", mode);
+    int mode = -1, effect = -1;
+    if (cJSON_GetObjectItem(root, "mode")) {
+        mode = cJSON_GetObjectItem(root, "mode")->valueint;
+    }
+    if (cJSON_GetObjectItem(root, "effect")) {
+        effect = cJSON_GetObjectItem(root, "effect")->valueint;
+    }
+    ESP_LOGI(REST_TAG, "Mode: %d", mode);
+    ESP_LOGI(REST_TAG, "Effect: %d", effect);
 
     coob = coob_get_instance();
     switch (mode) {
@@ -178,6 +185,11 @@ static esp_err_t cube_mode_switch_handler(httpd_req_t *req) {
             ESP_LOGI(REST_TAG, "Wrong mode provided: %d", mode);
             break;
     }
+    if (effect >= 0) {
+        ESP_LOGI(REST_TAG, "Switch effect: %d", effect);
+        coob_switch_effect(coob, effect);
+    }
+
     cJSON_Delete(root);
     httpd_resp_sendstr(req, "Post control value successfully");
     return ESP_OK;
