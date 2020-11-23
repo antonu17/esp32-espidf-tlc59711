@@ -3,9 +3,12 @@
 #include <esp_log.h>
 #include <stdlib.h>
 
+#include "../nvs.h"
 #include "coob_state.h"
 #include "effect_list.h"
 #include "loop_state.h"
+#include "solo_state.h"
+#include "persistence.h"
 
 struct coob {
     struct coob_state state;
@@ -16,9 +19,28 @@ static coob_t instance = NULL;
 static coob_t coob_new(void) {
     coob_t instance = malloc(sizeof *instance);
     if (NULL != instance) {
-        instance->state.current_effect = effect_list_first(effect_list);
-        /* Specify the initial state. */
-        transition_to_loop(&instance->state);
+
+        /* Specify the initial effect */
+        char *effect_name = load_effect();
+        effect_t *effect = effect_list_get_by_name(effect_list, effect_name);
+        if (NULL == effect) {
+            effect = effect_list_first(effect_list);
+        }
+        instance->state.current_effect = effect;
+
+        /* Specify the initial mode */
+        coob_mode_t mode = load_mode();
+        switch (mode) {
+            case LOOP:
+                transition_to_loop(&instance->state);
+                break;
+            case SOLO:
+                transition_to_solo(&instance->state);
+                break;
+
+            default:
+                break;
+        }
     }
     return instance;
 }
@@ -47,6 +69,7 @@ void coob_switch_effect(coob_t instance, int i) {
 }
 
 void init_coob() {
+    init_nvs();
     init_effect_list();
     instance = coob_new();
 }

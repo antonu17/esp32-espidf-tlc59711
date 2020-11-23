@@ -7,6 +7,7 @@
 #include "coob_state.h"
 #include "effect_launcher.h"
 #include "effect_list.h"
+#include "persistence.h"
 
 /* Possible transition to the following state: */
 #include "loop_state.h"
@@ -41,6 +42,7 @@ void transition_to_solo(coob_state_t state) {
     state->name = "solo";
     state->loop = start_loop;
     state->switch_effect = switch_effect;
+    save_mode(SOLO);
     ESP_LOGD(__FILE__, "switched to solo mode");
 }
 

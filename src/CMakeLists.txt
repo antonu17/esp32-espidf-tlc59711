@@ -3,6 +3,7 @@
 
 set(app_sources
 	"main.c"
+	"nvs.c"
 	"effect.c"
 	"effect_list.c"
 	"event_loop.c"
@@ -18,6 +19,7 @@ set(app_sources
 	"coob/solo_state.c"
 	"coob/switching_state.c"
 	"coob/coob.c"
+	"coob/persistence.c"
 	"coob/effect_launcher.c"
 	"http/http.c"
 	"http/rest_server.c"

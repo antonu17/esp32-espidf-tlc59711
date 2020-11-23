@@ -3,6 +3,7 @@
 
 #include <esp_log.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "effect_functions.h"
 
@@ -121,6 +122,23 @@ effect_t *effect_list_get_by_idx(effect_list_t list, int idx) {
     }
 
     return current->effect;
+}
+
+effect_t *effect_list_get_by_name(effect_list_t list, char *effect_name) {
+    list_node_t *head = list->head;
+    if (NULL == head) {
+        return NULL;
+    }
+
+    list_node_t *current = head;
+    while (current != NULL) {
+        if (!strcmp(effect_name, current->effect->name)) {
+            return current->effect;
+        }
+        current = current->next;
+    }
+
+    return NULL;
 }
 
 void init_effect_list() {

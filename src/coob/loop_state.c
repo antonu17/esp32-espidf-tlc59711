@@ -8,6 +8,7 @@
 #include "effect_functions.h"
 #include "effect_launcher.h"
 #include "effect_list.h"
+#include "persistence.h"
 
 /* Possible transition to the following state: */
 #include "solo_state.h"
@@ -45,6 +46,7 @@ void transition_to_loop(coob_state_t state) {
     default_state(state);
     state->name = "loop";
     state->solo = start_solo;
+    save_mode(LOOP);
     ESP_LOGD(__FILE__, "switched to loop mode");
 }
 
