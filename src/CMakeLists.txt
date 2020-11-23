@@ -21,7 +21,6 @@ set(app_sources
 	"coob/effect_launcher.c"
 	"http/http.c"
 	"http/rest_server.c"
-	"http/file_server.c"
 	"effect_functions/cube_color_wheel.c"
 	"effect_functions/wave_color_wheel.c"
 	"effect_functions/mic_spectrum.c"

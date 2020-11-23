@@ -18,7 +18,7 @@
 #include "stats.h"
 #include "tlc59711.h"
 
-static const char *REST_TAG = "esp-rest";
+static const char *REST_TAG = __FILE__;
 #define REST_CHECK(a, str, goto_tag, ...)                                              \
     do {                                                                               \
         if (!(a)) {                                                                    \

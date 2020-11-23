@@ -20,10 +20,9 @@
 
 #define MDNS_INSTANCE "esp home web server"
 
-static const char *TAG = "HTTP";
+static const char *TAG = __FILE__;
 
 esp_err_t start_rest_server(const char *base_path);
-esp_err_t start_file_server(const char *base_path);
 
 static void initialise_mdns(void) {
     mdns_init();
@@ -46,7 +45,6 @@ void init_http(void) {
     netbiosns_init();
     netbiosns_set_name("esp-home");
 
-    // ESP_ERROR_CHECK(start_file_server("/spiffs"));
     ESP_ERROR_CHECK(start_rest_server("/spiffs"));
     list_dir("/spiffs");
 }
