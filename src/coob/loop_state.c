@@ -58,6 +58,7 @@ void transition_to_loop(coob_state_t state) {
     state->name = "loop";
     state->solo = start_solo;
     state->switch_effect = switch_effect;
+    state->current_mode = LOOP;
     save_mode(LOOP);
     ESP_LOGD(__FILE__, "switched to loop mode");
 }

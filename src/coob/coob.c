@@ -68,6 +68,10 @@ void coob_switch_effect(coob_t instance, int i) {
     instance->state.switch_effect(&instance->state, i);
 }
 
+int coob_get_mode(coob_t instance) {
+    return instance->state.current_mode;
+}
+
 void init_coob() {
     init_nvs();
     init_effect_list();

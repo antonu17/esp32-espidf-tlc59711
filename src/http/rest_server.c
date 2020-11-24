@@ -197,6 +197,23 @@ static esp_err_t cube_mode_switch_handler(httpd_req_t *req) {
 }
 
 /* Return effect list */
+static esp_err_t cube_mode_get_handler(httpd_req_t *req) {
+
+    httpd_resp_set_type(req, "application/json");
+    coob_t coob = coob_get_instance();
+    int mode = coob_get_mode(coob);
+    cJSON *root = cJSON_CreateObject();
+    cJSON_AddNumberToObject(root, "mode", mode);
+
+    const char *response = cJSON_Print(root);
+    httpd_resp_sendstr(req, response);
+    free((void *)response);
+    cJSON_Delete(root);
+
+    return ESP_OK;
+}
+
+/* Return effect list */
 static esp_err_t effect_list_get_handler(httpd_req_t *req) {
     int effect_count;
     cJSON *root, *effects;
@@ -271,6 +288,15 @@ esp_err_t start_rest_server(const char *base_path) {
         .user_ctx = rest_context,
     };
     httpd_register_uri_handler(server, &cube_mode_switch_uri);
+
+    /* URI handler for fetching current mode */
+    httpd_uri_t cube_mode_get_uri = {
+        .uri = "/api/v1/mode",
+        .method = HTTP_GET,
+        .handler = cube_mode_get_handler,
+        .user_ctx = rest_context,
+    };
+    httpd_register_uri_handler(server, &cube_mode_get_uri);
 
     /* URI handler for fetching effect list */
     httpd_uri_t effect_list_get_uri = {

@@ -42,6 +42,7 @@ void transition_to_solo(coob_state_t state) {
     state->name = "solo";
     state->loop = start_loop;
     state->switch_effect = switch_effect;
+    state->current_mode = SOLO;
     save_mode(SOLO);
     ESP_LOGD(__FILE__, "switched to solo mode");
 }
