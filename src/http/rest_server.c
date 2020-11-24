@@ -15,6 +15,7 @@
 #include <fcntl.h>
 #include <string.h>
 
+#include "effect_list.h"
 #include "stats.h"
 #include "tlc59711.h"
 
@@ -195,6 +196,29 @@ static esp_err_t cube_mode_switch_handler(httpd_req_t *req) {
     return ESP_OK;
 }
 
+/* Return effect list */
+static esp_err_t effect_list_get_handler(httpd_req_t *req) {
+    int effect_count;
+    cJSON *root, *effects;
+    httpd_resp_set_type(req, "application/json");
+
+    effect_count = effect_list_length(effect_list);
+    root = cJSON_CreateObject();
+    effects = cJSON_AddArrayToObject(root, "effects");
+    cJSON_AddNumberToObject(root, "effect_count", effect_count);
+
+    for (int i = 0; i < effect_count; i++) {
+        cJSON_AddItemToArray(effects, cJSON_CreateString(effect_list_get_by_idx(effect_list, i)->name));
+    }
+
+    const char *response = cJSON_Print(root);
+    httpd_resp_sendstr(req, response);
+    free((void *)response);
+    cJSON_Delete(root);
+
+    return ESP_OK;
+}
+
 /* Simple handler for getting system handler */
 static esp_err_t system_info_get_handler(httpd_req_t *req) {
     httpd_resp_set_type(req, "application/json");
@@ -247,6 +271,15 @@ esp_err_t start_rest_server(const char *base_path) {
         .user_ctx = rest_context,
     };
     httpd_register_uri_handler(server, &cube_mode_switch_uri);
+
+    /* URI handler for fetching effect list */
+    httpd_uri_t effect_list_get_uri = {
+        .uri = "/api/v1/effects",
+        .method = HTTP_GET,
+        .handler = effect_list_get_handler,
+        .user_ctx = rest_context,
+    };
+    httpd_register_uri_handler(server, &effect_list_get_uri);
 
     /* URI handler for fetching system info */
     httpd_uri_t system_info_get_uri = {
