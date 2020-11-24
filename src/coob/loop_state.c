@@ -27,7 +27,18 @@ static void start_solo(coob_state_t state) {
     transition_to_solo(state);
 }
 
-static void switch_effect(coob_state_t state) {
+static void switch_effect(coob_state_t state, int i) {
+    effect_t *e = NULL;
+    if (i >= effect_list_length(effect_list)) {
+        ESP_LOGD(__FILE__, "effect index is out of bounds: %d", i);
+        return;
+    }
+    e = effect_list_get_by_idx(effect_list, i);
+    stop_loop_mode(state);
+    transition_to_switching(state, e, transition_to_loop);
+}
+
+static void switch_next_effect(coob_state_t state) {
     effect_t *next_effect = effect_list_next(effect_list, state->current_effect);
     if (NULL == next_effect) {
         next_effect = effect_list_first(effect_list);
@@ -46,6 +57,7 @@ void transition_to_loop(coob_state_t state) {
     default_state(state);
     state->name = "loop";
     state->solo = start_solo;
+    state->switch_effect = switch_effect;
     save_mode(LOOP);
     ESP_LOGD(__FILE__, "switched to loop mode");
 }
@@ -61,7 +73,7 @@ static void start_loop_mode(coob_state_t state) {
     }
 
     effect_run(state->current_effect, EFFECT_TIMEOUT);
-    xTaskCreatePinnedToCore(switch_effect, "switch_effect", 4096, state, 2, NULL, 0);
+    xTaskCreatePinnedToCore(switch_next_effect, "switch_next_effect", 4096, state, 2, NULL, 0);
     vTaskDelay(portMAX_DELAY);
 }
 
