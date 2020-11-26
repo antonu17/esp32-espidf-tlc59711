@@ -3,7 +3,7 @@
 
 set(app_sources
 	"main.c"
-	"nvs.c"
+	"storage.c"
 	"effect.c"
 	"effect_list.c"
 	"event_loop.c"

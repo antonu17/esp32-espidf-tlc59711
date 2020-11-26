@@ -2,7 +2,7 @@
 
 #include <esp_log.h>
 
-#include "../nvs.h"
+#include "storage.h"
 
 const char* NS = "coob";
 const char* MODE = "mode";

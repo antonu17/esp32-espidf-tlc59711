@@ -4,11 +4,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void write_nvs_str(const char* namespace, const char* key, const char* data) {
+void write_nvs_str(const char* ns, const char* key, const char* data) {
     esp_err_t err;
     nvs_handle_t my_handle;
 
-    err = nvs_open(namespace, NVS_READWRITE, &my_handle);
+    err = nvs_open(ns, NVS_READWRITE, &my_handle);
     if (err != ESP_OK) {
         return;
     }
@@ -18,12 +18,12 @@ void write_nvs_str(const char* namespace, const char* key, const char* data) {
     nvs_close(my_handle);
 }
 
-char* read_nvs_str(const char* namespace, const char* key) {
+char* read_nvs_str(const char* ns, const char* key) {
     esp_err_t err;
     nvs_handle_t my_handle;
     char* result = "";
 
-    err = nvs_open(namespace, NVS_READWRITE, &my_handle);
+    err = nvs_open(ns, NVS_READWRITE, &my_handle);
     if (err != ESP_OK) {
         return result;
     }
@@ -50,11 +50,11 @@ char* read_nvs_str(const char* namespace, const char* key) {
     return result;
 }
 
-void write_nvs_int(const char* namespace, const char* key, const int data) {
+void write_nvs_int(const char* ns, const char* key, const int data) {
     esp_err_t err;
     nvs_handle_t my_handle;
 
-    err = nvs_open(namespace, NVS_READWRITE, &my_handle);
+    err = nvs_open(ns, NVS_READWRITE, &my_handle);
     if (err != ESP_OK) {
         return;
     }
@@ -64,12 +64,12 @@ void write_nvs_int(const char* namespace, const char* key, const int data) {
     nvs_close(my_handle);
 }
 
-int read_nvs_int(const char* namespace, const char* key) {
+int read_nvs_int(const char* ns, const char* key) {
     esp_err_t err;
     nvs_handle_t my_handle;
     int result = 0;
 
-    err = nvs_open(namespace, NVS_READWRITE, &my_handle);
+    err = nvs_open(ns, NVS_READWRITE, &my_handle);
     if (err != ESP_OK) {
         return result;
     }
@@ -81,7 +81,7 @@ int read_nvs_int(const char* namespace, const char* key) {
     return result;
 }
 
-void init_nvs() {
+void init_storage() {
     esp_err_t err = nvs_flash_init();
     if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
         // NVS partition was truncated and needs to be erased

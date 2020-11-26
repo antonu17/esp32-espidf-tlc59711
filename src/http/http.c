@@ -1,9 +1,11 @@
+#include "http.h"
+
 #include <esp_event.h>
 #include <esp_log.h>
 #include <esp_netif.h>
 #include <mdns.h>
 
-#include "../nvs.h"
+#include "storage.h"
 #include "sdkconfig.h"
 #include "spiffs.h"
 
@@ -26,7 +28,7 @@ static void initialise_mdns(void) {
 }
 
 void init_http(void) {
-    init_nvs();
+    init_storage();
     ESP_ERROR_CHECK(esp_netif_init());
 
     initialise_mdns();
