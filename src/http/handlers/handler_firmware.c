@@ -106,11 +106,14 @@ esp_err_t upload_firmware_handler(httpd_req_t *req) {
                         return ESP_FAIL;
                     }
                 }
+
+                #if defined(DO_VERSION_CHECK)
                 if (memcmp(new_app_info.version, running_app_info.version, sizeof(new_app_info.version)) == 0) {
                     ESP_LOGW(TAG, "Current running version is the same as a new. We will not continue the update.");
                     httpd_resp_send_err(req, HTTPD_505_VERSION_NOT_SUPPORTED, "Current running version is the same as a new. We will not continue the update.");
                     return ESP_FAIL;
                 }
+                #endif
 
                 image_header_was_checked = true;
 
@@ -163,6 +166,7 @@ esp_err_t upload_firmware_handler(httpd_req_t *req) {
         httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, esp_err_to_name(err));
         return ESP_FAIL;
     }
+    httpd_resp_sendstr(req, "Prepare to restart system!");
     xTaskCreatePinnedToCore(post_update, "post_update", 1024, NULL, 2, NULL, 0);
     return ESP_OK;
 }
