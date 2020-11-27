@@ -4,6 +4,7 @@
 set(app_sources
 	"main.c"
 	"storage.c"
+	"firmware_update.c"
 	"effect.c"
 	"effect_list.c"
 	"event_loop.c"
@@ -23,6 +24,8 @@ set(app_sources
 	"coob/effect_launcher.c"
 	"http/http.c"
 	"http/rest_server.c"
+	"http/handlers/handler_mode.c"
+	"http/handlers/handler_firmware.c"
 	"effect_functions/cube_color_wheel.c"
 	"effect_functions/wave_color_wheel.c"
 	"effect_functions/mic_spectrum.c"
@@ -43,6 +46,7 @@ set(app_sources
 set(includedirs
 	"coob/"
 	"effect_functions/"
+	"http/"
 )
 
 idf_component_register(SRCS ${app_sources}

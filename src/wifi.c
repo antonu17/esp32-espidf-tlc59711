@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "nvs.h"
+#include "storage.h"
 
 /* FreeRTOS event group to signal when we are connected & ready to make a request */
 static EventGroupHandle_t s_wifi_event_group;
@@ -32,6 +32,7 @@ void wifi_connect(char *ssid, char *password) {
     bzero(&wifi_config, sizeof(wifi_config_t));
     memcpy(wifi_config.sta.ssid, ssid, strlen(ssid));
     memcpy(wifi_config.sta.password, password, strlen(password));
+    ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_NONE));
     ESP_ERROR_CHECK(esp_wifi_disconnect());
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
     ESP_ERROR_CHECK(esp_wifi_connect());
@@ -104,7 +105,7 @@ static void smartconfig_task(void *parm) {
 }
 
 void init_wifi(void) {
-    init_nvs();
+    init_storage();
 
     char *ssid = read_nvs_str("storage", "ssid");
     char *password = read_nvs_str("storage", "password");
