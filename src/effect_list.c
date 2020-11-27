@@ -125,6 +125,10 @@ effect_t *effect_list_get_by_idx(effect_list_t list, int idx) {
 }
 
 effect_t *effect_list_get_by_name(effect_list_t list, char *effect_name) {
+    if (NULL == effect_name) {
+        return NULL;
+    }
+
     list_node_t *head = list->head;
     if (NULL == head) {
         return NULL;

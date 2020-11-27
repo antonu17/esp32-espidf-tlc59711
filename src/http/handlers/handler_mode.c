@@ -11,9 +11,9 @@
 esp_err_t cube_mode_get_handler(httpd_req_t *req) {
     httpd_resp_set_type(req, "application/json");
     coob_t coob = coob_get_instance();
-    int mode = coob_get_mode(coob);
     cJSON *root = cJSON_CreateObject();
-    cJSON_AddNumberToObject(root, "mode", mode);
+    cJSON_AddNumberToObject(root, "mode", coob_get_mode(coob));
+    cJSON_AddStringToObject(root, "effect", coob_get_effect(coob));
 
     const char *response = cJSON_Print(root);
     httpd_resp_sendstr(req, response);
@@ -69,15 +69,16 @@ esp_err_t cube_mode_switch_handler(httpd_req_t *req) {
     buf[total_len] = '\0';
 
     cJSON *root = cJSON_Parse(buf);
-    int mode = -1, effect = -1;
+    int mode = -1;
+    char *effect = NULL;
     if (cJSON_GetObjectItem(root, "mode")) {
         mode = cJSON_GetObjectItem(root, "mode")->valueint;
     }
     if (cJSON_GetObjectItem(root, "effect")) {
-        effect = cJSON_GetObjectItem(root, "effect")->valueint;
+        effect = cJSON_GetObjectItem(root, "effect")->valuestring;
     }
     ESP_LOGI(TAG, "Mode: %d", mode);
-    ESP_LOGI(TAG, "Effect: %d", effect);
+    ESP_LOGI(TAG, "Effect: %s", effect);
 
     coob = coob_get_instance();
     switch (mode) {
@@ -91,8 +92,8 @@ esp_err_t cube_mode_switch_handler(httpd_req_t *req) {
             ESP_LOGI(TAG, "Wrong mode provided: %d", mode);
             break;
     }
-    if (effect >= 0) {
-        ESP_LOGI(TAG, "Switch effect: %d", effect);
+    if (NULL != effect) {
+        ESP_LOGI(TAG, "Switch effect: %s", effect);
         coob_switch_effect(coob, effect);
     }
 

@@ -7,8 +7,9 @@ coob_t coob_get_instance(void);
 
 void coob_mode_loop(coob_t instance);
 void coob_mode_solo(coob_t instance);
-void coob_switch_effect(coob_t instance, int effect);
+void coob_switch_effect(coob_t instance, char *effect_name);
 int coob_get_mode(coob_t instance);
+char* coob_get_effect(coob_t instance);
 
 void init_coob();
 

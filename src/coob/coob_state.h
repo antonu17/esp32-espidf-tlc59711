@@ -8,7 +8,7 @@
 typedef struct coob_state* coob_state_t;
 
 typedef void (*switch_mode_func_t)(coob_state_t);
-typedef void (*switch_effect_func_t)(coob_state_t, int i);
+typedef void (*switch_effect_func_t)(coob_state_t, char *effect_name);
 
 typedef enum {
     LOOP = 0,

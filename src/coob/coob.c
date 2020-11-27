@@ -63,12 +63,16 @@ void coob_mode_solo(coob_t instance) {
     instance->state.solo(&instance->state);
 }
 
-void coob_switch_effect(coob_t instance, int i) {
-    instance->state.switch_effect(&instance->state, i);
+void coob_switch_effect(coob_t instance, char *effect_name) {
+    instance->state.switch_effect(&instance->state, effect_name);
 }
 
 int coob_get_mode(coob_t instance) {
     return instance->state.current_mode;
+}
+
+char* coob_get_effect(coob_t instance) {
+    return instance->state.current_effect->name;
 }
 
 void init_coob() {

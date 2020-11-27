@@ -27,13 +27,13 @@ static void start_solo(coob_state_t state) {
     transition_to_solo(state);
 }
 
-static void switch_effect(coob_state_t state, int i) {
+static void switch_effect(coob_state_t state, char *effect_name) {
     effect_t *e = NULL;
-    if (i >= effect_list_length(effect_list)) {
-        ESP_LOGD(__FILE__, "effect index is out of bounds: %d", i);
+    e = effect_list_get_by_name(effect_list, effect_name);
+    if (NULL == e) {
+        ESP_LOGD(__FILE__, "effect not found: %s", effect_name);
         return;
     }
-    e = effect_list_get_by_idx(effect_list, i);
     stop_loop_mode(state);
     transition_to_switching(state, e, transition_to_loop);
 }
