@@ -21,5 +21,7 @@ extern rgb_t frame_buffer[512];
 #define BRIGHTNESS_BLUE 180
 
 void init_framebuffer();
+void start_framebuffer();
+void stop_framebuffer();
 
 #endif  // FRAMEBUFFER_H

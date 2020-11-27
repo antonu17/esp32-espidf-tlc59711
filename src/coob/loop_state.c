@@ -11,6 +11,7 @@
 #include "persistence.h"
 
 /* Possible transition to the following state: */
+#include "idle_state.h"
 #include "solo_state.h"
 #include "switching_state.h"
 
@@ -23,19 +24,24 @@ static TaskHandle_t task = NULL;
 
 static void start_solo(coob_state_t state) {
     stop_loop_mode(state);
-
     transition_to_solo(state);
 }
 
-static void switch_effect(coob_state_t state, char *effect_name) {
+static void start_idle(coob_state_t state) {
+    stop_loop_mode(state);
+    transition_to_idle(state);
+}
+
+static coob_err_t switch_effect(coob_state_t state, char *effect_name) {
     effect_t *e = NULL;
     e = effect_list_get_by_name(effect_list, effect_name);
     if (NULL == e) {
         ESP_LOGD(__FILE__, "effect not found: %s", effect_name);
-        return;
+        return COOB_ERR_EFFECT_NOT_FOUND;
     }
     stop_loop_mode(state);
     transition_to_switching(state, e, transition_to_loop);
+    return COOB_ERR_OK;
 }
 
 static void switch_next_effect(coob_state_t state) {
@@ -56,6 +62,7 @@ void transition_to_loop(coob_state_t state) {
 
     default_state(state);
     state->name = "loop";
+    state->idle = start_idle;
     state->solo = start_solo;
     state->switch_effect = switch_effect;
     state->current_mode = LOOP;

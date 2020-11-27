@@ -5,6 +5,9 @@
 #include <esp_wifi.h>
 #include <sys/param.h>
 
+#include "coob.h"
+#include "framebuffer.h"
+
 #define TAG __FILE__
 #define MAX_FILE_SIZE (1024 * 1024)  // 1 MB
 #define MAX_FILE_SIZE_STR "1MB"
@@ -33,6 +36,8 @@ esp_err_t upload_firmware_handler(httpd_req_t *req) {
     const esp_partition_t *update_partition = NULL;
 
     ESP_LOGI(TAG, "Starting firmware update");
+
+    coob_mode_idle(coob_get_instance());
 
     const esp_partition_t *configured = esp_ota_get_boot_partition();
     const esp_partition_t *running = esp_ota_get_running_partition();

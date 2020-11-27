@@ -7,6 +7,7 @@
 
 rgb_t frame_buffer[512];
 static uint8_t rows[] = {A0, A1, A2, A3, A4, A5, A6, A7};
+static esp_timer_handle_t write_row_timer;
 
 void IRAM_ATTR write_row(void *arg) {
     static uint8_t previous_row = 0, current_row = 0;
@@ -57,10 +58,20 @@ void init_framebuffer() {
         .callback = &write_row,
         .name = "write_row",
     };
-    esp_timer_handle_t write_row_timer;
 
     ESP_ERROR_CHECK(esp_timer_create(&write_row_timer_args, &write_row_timer));
+    start_framebuffer();
+}
 
+void start_framebuffer() {
     // Write to the TLC59711 stack via the High Resolution Timer every 1250us (~100 fps)
     ESP_ERROR_CHECK(esp_timer_start_periodic(write_row_timer, 1250));
+}
+
+void stop_framebuffer() {
+    for (int i = 0; i < 8; i++) {
+        gpio_set_level(rows[i], 0);
+    }
+
+    ESP_ERROR_CHECK(esp_timer_stop(write_row_timer));
 }

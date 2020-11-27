@@ -55,6 +55,10 @@ coob_t coob_get_instance(void) {
     return instance;
 }
 
+void coob_mode_idle(coob_t instance) {
+    instance->state.idle(&instance->state);
+}
+
 void coob_mode_loop(coob_t instance) {
     instance->state.loop(&instance->state);
 }
@@ -63,16 +67,28 @@ void coob_mode_solo(coob_t instance) {
     instance->state.solo(&instance->state);
 }
 
-void coob_switch_effect(coob_t instance, char *effect_name) {
-    instance->state.switch_effect(&instance->state, effect_name);
+coob_err_t coob_switch_effect(coob_t instance, char *effect_name) {
+    return instance->state.switch_effect(&instance->state, effect_name);
 }
 
 int coob_get_mode(coob_t instance) {
     return instance->state.current_mode;
 }
 
-char* coob_get_effect(coob_t instance) {
+char *coob_get_effect(coob_t instance) {
     return instance->state.current_effect->name;
+}
+
+char *coob_error_str(coob_err_t err) {
+    switch (err) {
+        case COOB_ERR_EFFECT_NOT_FOUND:
+            return "effect not found";
+            break;
+
+        default:
+            return "undefined error";
+            break;
+    }
 }
 
 void init_coob() {

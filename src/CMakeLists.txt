@@ -16,6 +16,7 @@ set(app_sources
 	"wifi.c"
 	"stats.c"
 	"coob/coob_state.c"
+	"coob/idle_state.c"
 	"coob/loop_state.c"
 	"coob/solo_state.c"
 	"coob/switching_state.c"
