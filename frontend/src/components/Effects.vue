@@ -2,8 +2,9 @@
   <v-card class="mx-auto" max-width="400">
     <v-card-title>Effects selection</v-card-title>
     <v-card-text>
-      <v-radio-group v-model="effects">
-        <v-radio v-for="n in 8" :key="n" :label="`Radio ${n}`" :value="n"></v-radio>
+      <v-skeleton-loader v-if="loading" type="list-item-avatar-three-line"></v-skeleton-loader>
+      <v-radio-group v-if="!loading" v-bind:value="currentEffect" @change="onChange">
+        <v-radio v-for="n in effects" :key="n" :label="`${n}`" :value="n"></v-radio>
       </v-radio-group>
     </v-card-text>
   </v-card>
@@ -12,9 +13,19 @@
 <script>
 export default {
   name: "Effects",
+  props: {
+    loading: Boolean,
+    effects: Array,
+    currentEffect: String,
+  },
+  methods: {
+    onChange(value) {
+      this.$emit('switch-effect', value)
+    }
+  },
   data() {
     return {
-      effects: 1
+      effect: ''
     };
   }
 };

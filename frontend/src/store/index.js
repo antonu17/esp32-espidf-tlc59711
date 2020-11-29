@@ -30,15 +30,38 @@ export default new Vuex.Store({
       context.commit('SET_LOADING_STATUS', 'loading')
       axios.get('/api/v1/effects')
         .then(function (response) {
-          console.log(response);
-          context.commit('SET_LOADING_STATUS', 'notLoading')
-          context.commit('SET_EFFECTS', response.data.effects)
+          setTimeout(function () {
+            context.commit('SET_EFFECTS', response.data.effects)
+          }, 1000)
+        })
+        .catch(function (error) {
+          console.log(error);
+        })
+    },
+    fetchCurrentMode(context) {
+      axios.get('/api/v1/mode')
+        .then(function (response) {
+          context.commit('SET_LOADING_STATUS', 'notLoading');
+          context.commit('SET_CURRENT_EFFECT', response.data.effect);
+          context.commit('SET_CURRENT_MODE', response.data.mode);
         })
         .catch(function (error) {
           console.log(error);
         })
     }
   },
-  modules: {
+  getters: {
+    effects(state) {
+      return state.effects;
+    },
+    currentEffect(state) {
+      return state.currentEffect;
+    },
+    currentMode(state) {
+      return state.currentMode;
+    },
+    isLoading(state) {
+      return state.loadingStatus === 'loading';
+    }
   }
 })
