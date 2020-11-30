@@ -1,5 +1,5 @@
 <template>
-  <v-app>
+  <v-app dark>
     <v-app-bar app color="primary" dark>
       <v-app-bar-nav-icon></v-app-bar-nav-icon>
       <v-toolbar-title>RGB LED Cube</v-toolbar-title>
