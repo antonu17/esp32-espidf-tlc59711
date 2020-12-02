@@ -32,6 +32,10 @@ export default {
         {
           id: 1,
           name: "Solo"
+        },
+        {
+          id: 2,
+          name: "Off"
         }
       ]
     };

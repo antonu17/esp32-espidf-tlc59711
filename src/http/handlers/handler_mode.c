@@ -87,6 +87,9 @@ esp_err_t cube_mode_switch_handler(httpd_req_t *req) {
             case 1:
                 coob_mode_solo(coob);
                 break;
+            case 2:
+                coob_mode_idle(coob);
+                break;
             default:
                 ESP_LOGI(TAG, "Wrong mode provided: %d", mode);
                 httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "bad mode");

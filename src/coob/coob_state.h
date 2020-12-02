@@ -12,9 +12,9 @@ typedef void (*switch_mode_func_t)(coob_state_t);
 typedef coob_err_t (*switch_effect_func_t)(coob_state_t, char* effect_name);
 
 typedef enum {
-    IDLE = -1,
     LOOP = 0,
     SOLO = 1,
+    IDLE = 2,
 } coob_mode_t;
 
 struct coob_state {
