@@ -7,6 +7,8 @@
 
 #define FRAME_DELAY pdMS_TO_TICKS(40)
 #define BAR_SCALE 32.0f
+#define TWO_PI 6.28318530718f
+#define CYLINDER_TWIST 0.09f
 
 static float clampf(float value, float minimum, float maximum) {
   return fminf(maximum, fmaxf(minimum, value));
@@ -21,17 +23,22 @@ static rgb_t scale_color(rgb_t color, float brightness) {
   };
 }
 
-static rgb_t highlight_color(rgb_t color) {
-  return (rgb_t){
-      .r = (uint8_t)(((uint16_t)color.r + 255) / 2),
-      .g = (uint8_t)(((uint16_t)color.g + 255) / 2),
-      .b = (uint8_t)(((uint16_t)color.b + 255) / 2),
-  };
+static float wrap_angle(float angle) {
+  while (angle < 0) angle += TWO_PI;
+  while (angle >= TWO_PI) angle -= TWO_PI;
+  return angle;
+}
+
+static float cube_boundary_radius(float angle) {
+  const float direction =
+      fmaxf(fabsf(cosf(angle)), fabsf(sinf(angle)));
+  return 3.5f / direction;
 }
 
 void mic_spectrum(effect_t *effect) {
   float smoothed[ICS43434_SPECTRUM_BARS] = {0};
   float peaks[ICS43434_SPECTRUM_BARS] = {0};
+  float rotation = 0;
   uint8_t hue_phase = 0;
 
   ics43434_init();
@@ -58,29 +65,69 @@ void mic_spectrum(effect_t *effect) {
       levels[band] = smoothed[band];
     }
 
-    fb_shift(FB_AXIS_X, FB_SHIFT_BACK);
-
+    float energy = 0;
     for (int band = 0; band < ICS43434_SPECTRUM_BARS; band++) {
-      for (int z = 0; z < 8; z++) {
-        const float coverage = clampf(levels[band] - z, 0.0f, 1.0f);
-        if (coverage <= 0) continue;
+      energy += levels[band];
+    }
+    energy = clampf(energy / (ICS43434_SPECTRUM_BARS * 8.0f), 0.0f, 1.0f);
 
-        const uint8_t hue = hue_phase + band * 25 - z * 4;
-        const float height_brightness = 0.25f + 0.75f * (z + 1) / 8.0f;
-        const rgb_t color = scale_color(hue_to_rgb_sine2(hue),
-                                        coverage * height_brightness);
-        fb_set_pixel(7, band, z, color);
-      }
+    const float shell_radius = 0.78f + energy * 0.12f;
+    fb_clear_draft();
 
-      if (peaks[band] > levels[band] + 0.35f) {
-        const int peak_z = (int)clampf(floorf(peaks[band]), 0.0f, 7.0f);
-        const uint8_t hue = hue_phase + band * 25 - peak_z * 4;
-        fb_set_pixel(7, band, peak_z,
-                     highlight_color(hue_to_rgb_sine2(hue)));
+    for (int x = 0; x < 8; x++) {
+      for (int y = 0; y < 8; y++) {
+        const float dx = x - 3.5f;
+        const float dy = y - 3.5f;
+        const float pixel_radius = sqrtf(dx * dx + dy * dy);
+        const float pixel_angle = atan2f(dy, dx);
+        const float normalized_radius =
+            pixel_radius / cube_boundary_radius(pixel_angle);
+        const float shell = clampf(
+            1.0f - fabsf(normalized_radius - shell_radius) / 0.30f,
+            0.0f, 1.0f);
+        if (shell <= 0.05f) continue;
+
+        for (int z = 0; z < 8; z++) {
+          const float angle =
+              wrap_angle(pixel_angle - rotation - z * CYLINDER_TWIST);
+          const float band_position =
+              angle * ICS43434_SPECTRUM_BARS / TWO_PI;
+          const int band = (int)floorf(band_position);
+          const int next_band = (band + 1) % ICS43434_SPECTRUM_BARS;
+          const float mix = band_position - band;
+          const float height =
+              levels[band] * (1.0f - mix) + levels[next_band] * mix;
+          const float coverage = clampf(height - z, 0.0f, 1.0f);
+          if (coverage <= 0) continue;
+
+          const uint8_t hue =
+              hue_phase + (uint8_t)(band_position * 32.0f) - z * 3;
+          const float height_brightness = 0.30f + 0.70f * (z + 1) / 8.0f;
+          const rgb_t color = scale_color(
+              hue_to_rgb_sine2(hue), shell * coverage * height_brightness);
+          fb_set_pixel_draft(x, y, z, color);
+        }
       }
     }
 
-    hue_phase += 2;
+    for (int band = 0; band < ICS43434_SPECTRUM_BARS; band++) {
+      if (peaks[band] > levels[band] + 0.35f) {
+        const int peak_z = (int)clampf(floorf(peaks[band]), 0.0f, 7.0f);
+        const float angle =
+            rotation + peak_z * CYLINDER_TWIST + band * TWO_PI /
+                                                        ICS43434_SPECTRUM_BARS;
+        const float peak_radius =
+            shell_radius * cube_boundary_radius(angle);
+        const int x = (int)lroundf(3.5f + peak_radius * cosf(angle));
+        const int y = (int)lroundf(3.5f + peak_radius * sinf(angle));
+        const uint8_t hue = hue_phase + band * 32 - peak_z * 3;
+        fb_set_pixel_draft(x, y, peak_z, hue_to_rgb_sine2(hue));
+      }
+    }
+
+    fb_draw_draft();
+    rotation = wrap_angle(rotation + 0.045f + energy * 0.055f);
+    hue_phase++;
     vTaskDelay(FRAME_DELAY);
   }
 
