@@ -1,0 +1,182 @@
+esphome:
+  name: rgb-cube
+  friendly_name: RGB Cube
+  area: Living Room
+  min_version: 2026.9.1
+  project:
+    name: antonu17.rgb_cube
+    version: "1.0.0"
+  includes:
+    - src
+    - lib/tlc59711
+    - lib/cube_framebuffer
+    - lib/ics43434
+    - lib/cube_effects
+  on_boot:
+    - priority: 600
+      then:
+        - lambda: |-
+            cube_init();
+            cube_effect_timeout(id(effect_timeout).state);
+            cube_set_brightness(id(brightness).state);
+            if (id(cube_switch).state) {
+              cube_set_mode(id(cube_mode).current_option().c_str());
+            } else {
+              cube_set_mode("Off");
+            }
+  on_shutdown:
+    - priority: 700
+      then:
+        - lambda: cube_stop();
+
+esp32:
+  board: nodemcu-32s
+  framework:
+    type: esp-idf
+    sdkconfig_options:
+      # Keep Wi-Fi scheduling away from the time-sensitive framebuffer row
+      # refresh, which runs from the esp_timer task on core 0.
+      CONFIG_ESP32_WIFI_TASK_PINNED_TO_CORE_0: "n"
+      CONFIG_ESP32_WIFI_TASK_PINNED_TO_CORE_1: "y"
+      CONFIG_ESP_TIMER_TASK_AFFINITY_CPU0: "y"
+    components:
+      - espressif/esp-dsp==1.8.2
+    advanced:
+      include_builtin_idf_components:
+        - esp_driver_i2s
+
+logger:
+  level: INFO
+
+# Keep the API unencrypted so an existing Home Assistant ESPHome integration
+# can reconnect without changing its stored credentials.
+api:
+  reboot_timeout: 0s
+
+ota:
+  - platform: esphome
+
+web_server:
+  port: 80
+  version: 3
+
+# Provision with Improv over USB or the fallback access point. No Wi-Fi
+# credentials are stored in this repository.
+wifi:
+  reboot_timeout: 0s
+  ap:
+    ssid: RGB Cube Setup
+
+captive_portal:
+
+improv_serial:
+  next_url: http://{{ip_address}}/
+
+switch:
+  - platform: template
+    id: cube_switch
+    name: Cube Switch
+    restore_mode: RESTORE_DEFAULT_OFF
+    optimistic: true
+    turn_on_action:
+      - lambda: |-
+          std::string mode = id(cube_mode).current_option().str();
+          if (mode == "Off") {
+            mode = "Loop";
+            id(cube_mode).publish_state(mode);
+          }
+          cube_set_mode(mode.c_str());
+    turn_off_action:
+      - lambda: |-
+          cube_set_mode("Off");
+          id(cube_mode).publish_state("Off");
+
+button:
+  - platform: restart
+    name: Cube Restart
+
+  - platform: template
+    name: Prev Effect
+    on_press:
+      - lambda: |-
+          cube_prev_effect();
+          id(cube_effect).publish_state(cube_get_effect());
+
+  - platform: template
+    name: Next Effect
+    on_press:
+      - lambda: |-
+          cube_next_effect();
+          id(cube_effect).publish_state(cube_get_effect());
+
+number:
+  - platform: template
+    id: effect_timeout
+    name: Cube Effect Timeout
+    restore_value: true
+    optimistic: true
+    min_value: 0
+    max_value: 60
+    step: 1
+    initial_value: 15
+    set_action:
+      - lambda: cube_effect_timeout(x);
+
+  - platform: template
+    id: brightness
+    name: Cube Brightness
+    restore_value: true
+    optimistic: true
+    min_value: 0
+    max_value: 255
+    step: 1
+    initial_value: 10
+    set_action:
+      - lambda: cube_set_brightness(x);
+
+select:
+  - platform: template
+    id: cube_mode
+    name: Cube Mode
+    optimistic: true
+    restore_value: true
+    initial_option: Loop
+    options:
+      - Loop
+      - Solo
+      - "Off"
+    set_action:
+      - lambda: |-
+          cube_set_mode(x.c_str());
+          id(cube_switch).publish_state(x != "Off");
+
+  - platform: template
+    id: cube_effect
+    name: Cube Effect
+    optimistic: true
+    restore_value: true
+    initial_option: fireworks
+    options:
+      - fireworks
+      - sidewaves
+      - ball
+      - shift_suspend
+      - cube_color_wheel
+      - linespin
+      - rain
+      - ripples
+      - shift_planes
+      - sinelines
+      - vertical_travelers
+      - wave_color_wheel
+      - wireframes
+      - mic_spectrum
+    set_action:
+      - lambda: cube_set_effect(x.c_str());
+
+sensor:
+  - platform: template
+    name: Microphone Sensor
+    update_interval: 1s
+    accuracy_decimals: 0
+    lambda: return cube_microphone_level();

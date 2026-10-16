@@ -1,2 +1,4 @@
-.pio
-.vscode
+/.esphome/
+/.pio-core/
+/secrets.yaml
+/.vscode/
