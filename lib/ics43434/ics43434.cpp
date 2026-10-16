@@ -112,16 +112,6 @@ bool ics43434_read_spectrum(float bars[ICS43434_SPECTRUM_BARS],
   return true;
 }
 
-float ics43434_level() {
-  static float last_level = 0;
-  float bars[ICS43434_SPECTRUM_BARS];
-  if (!ics43434_read_spectrum(bars, 0)) return last_level;
-
-  last_level = 0;
-  for (float bar : bars) last_level = fmaxf(last_level, bar);
-  return last_level;
-}
-
 static void i2s_adc_task(void *arg) {
   (void)arg;
 

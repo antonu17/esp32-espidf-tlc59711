@@ -20,7 +20,6 @@ bool cube_set_effect(const char *name);
 const char *cube_get_effect();
 void cube_set_mode(const char *mode);
 const char *cube_get_mode();
-float cube_microphone_level();
 
 #ifdef __cplusplus
 }  // extern "C"

@@ -41,7 +41,6 @@ Improv over USB or connect to the open `RGB Cube Setup` access point and visit
 - Cube Brightness
 - Previous and next effect buttons
 - Cube Restart
-- Microphone Sensor
 
 ## Source layout
 

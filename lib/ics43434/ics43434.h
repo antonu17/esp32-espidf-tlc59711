@@ -13,7 +13,6 @@ extern "C" {
 void ics43434_init(void);
 bool ics43434_read_spectrum(float bars[ICS43434_SPECTRUM_BARS],
                             TickType_t timeout);
-float ics43434_level(void);
 
 #ifdef __cplusplus
 }  // extern "C"

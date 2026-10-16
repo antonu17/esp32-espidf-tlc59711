@@ -173,10 +173,3 @@ select:
       - mic_spectrum
     set_action:
       - lambda: cube_set_effect(x.c_str());
-
-sensor:
-  - platform: template
-    name: Microphone Sensor
-    update_interval: 1s
-    accuracy_decimals: 0
-    lambda: return cube_microphone_level();

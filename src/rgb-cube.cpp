@@ -164,9 +164,6 @@ const char *cube_get_mode() {
   return auto_cycle ? "Loop" : "Solo";
 }
 
-float cube_microphone_level() {
-  return ics43434_level();
-}
 
 void cube_effect_timeout(uint32_t sec) {
   ESP_LOGD(__FILE__, "set effect timeout: %d", sec);
