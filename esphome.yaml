@@ -22,7 +22,7 @@ esphome:
             if (id(cube_switch).state) {
               cube_set_mode(id(cube_mode).current_option().c_str());
             } else {
-              cube_set_mode("Off");
+              cube_stop();
             }
   on_shutdown:
     - priority: 700
@@ -79,17 +79,9 @@ switch:
     restore_mode: RESTORE_DEFAULT_OFF
     optimistic: true
     turn_on_action:
-      - lambda: |-
-          std::string mode = id(cube_mode).current_option().str();
-          if (mode == "Off") {
-            mode = "Loop";
-            id(cube_mode).publish_state(mode);
-          }
-          cube_set_mode(mode.c_str());
+      - lambda: cube_set_mode(id(cube_mode).current_option().c_str());
     turn_off_action:
-      - lambda: |-
-          cube_set_mode("Off");
-          id(cube_mode).publish_state("Off");
+      - lambda: cube_stop();
 
 button:
   - platform: restart
@@ -144,11 +136,10 @@ select:
     options:
       - Loop
       - Solo
-      - "Off"
     set_action:
       - lambda: |-
           cube_set_mode(x.c_str());
-          id(cube_switch).publish_state(x != "Off");
+          id(cube_switch).publish_state(true);
 
   - platform: template
     id: cube_effect

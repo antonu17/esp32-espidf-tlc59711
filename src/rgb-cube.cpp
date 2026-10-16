@@ -150,17 +150,13 @@ const char *cube_get_effect() {
 }
 
 void cube_set_mode(const char *mode) {
-  if (mode == nullptr || strcmp(mode, "Off") == 0) {
-    cube_stop();
-    return;
-  }
+  if (mode == nullptr) return;
 
   auto_cycle = strcmp(mode, "Solo") != 0;
   cube_start();
 }
 
 const char *cube_get_mode() {
-  if (!running) return "Off";
   return auto_cycle ? "Loop" : "Solo";
 }
 

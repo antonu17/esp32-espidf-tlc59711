@@ -35,7 +35,7 @@ Improv over USB or connect to the open `RGB Cube Setup` access point and visit
 ## Home Assistant entities
 
 - Cube Switch
-- Cube Mode (`Loop`, `Solo`, or `Off`)
+- Cube Mode (`Loop` or `Solo`)
 - Cube Effect
 - Cube Effect Timeout
 - Cube Brightness
