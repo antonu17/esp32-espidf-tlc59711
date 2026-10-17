@@ -35,47 +35,65 @@ static float cube_boundary_radius(float angle) {
   return 3.5f / direction;
 }
 
-static void draw_runner(float runner_rotation, float rotation,
-                        float shell_radius, float breath,
+static float spectrum_shell_brightness(float normalized_radius) {
+  static const float shell_radii[] = {0.18f, 0.45f, 0.72f, 0.99f};
+  float brightness = 0;
+  for (int i = 0; i < 4; i++) {
+    const float shell = clampf(
+        1.0f - fabsf(normalized_radius - shell_radii[i]) / 0.16f,
+        0.0f, 1.0f);
+    brightness = fmaxf(brightness, shell);
+  }
+  return brightness;
+}
+
+static void draw_runner(float runner_rotation, float rotation, float breath,
                         uint8_t hue_phase) {
+  const float direction_x = cosf(runner_rotation);
+  const float direction_y = sinf(runner_rotation);
+  const float ray_length = cube_boundary_radius(runner_rotation);
+
   for (int x = 0; x < 8; x++) {
     for (int y = 0; y < 8; y++) {
       const float dx = x - 3.5f;
       const float dy = y - 3.5f;
-      const float pixel_radius = sqrtf(dx * dx + dy * dy);
-      const float pixel_angle = atan2f(dy, dx);
-      const float normalized_radius =
-          pixel_radius / cube_boundary_radius(pixel_angle);
-      const float inner_shell = clampf(
-          1.0f - fabsf(normalized_radius - shell_radius) / 0.16f,
-          0.0f, 1.0f);
-      const float outer_shell = clampf(
-          1.0f - fabsf(normalized_radius - 1.0f) / 0.10f,
-          0.0f, 1.0f);
-      const float runner_shell = fmaxf(inner_shell, outer_shell);
+      const float along = dx * direction_x + dy * direction_y;
+      if (along < -0.45f) continue;
 
-      const float angle_distance =
-          fabsf(wrap_angle(pixel_angle - runner_rotation + TWO_PI * 0.5f) -
-                TWO_PI * 0.5f);
-      float trail = clampf(1.0f - angle_distance / 0.62f, 0.0f, 1.0f);
-      trail *= trail;
-      const float brightness = runner_shell * trail * breath;
-      if (brightness <= 0.015f) continue;
+      const float progress = clampf(along / ray_length, 0.0f, 1.0f);
+      const float across = fabsf(-dx * direction_y + dy * direction_x);
+      const float width =
+          clampf(1.0f - across / 0.68f, 0.0f, 1.0f);
+      const float origin = clampf(along + 0.55f, 0.0f, 1.0f);
+      const float tip = clampf(ray_length - along + 0.45f, 0.0f, 1.0f);
+      const float radial_brightness =
+          0.70f + 0.30f * progress;
 
-      const float color_angle = wrap_angle(pixel_angle - rotation);
-      const float band_position =
-          color_angle * ICS43434_SPECTRUM_BARS / TWO_PI;
-      const uint8_t hue =
-          hue_phase + (uint8_t)(band_position * 32.0f);
-      const rgb_t runner =
-          scale_color(hue_to_rgb_sine2(hue), brightness);
-      const rgb_t current = fb_get_pixel_draft(x, y, 0);
-      const rgb_t combined = {
-          .r = current.r > runner.r ? current.r : runner.r,
-          .g = current.g > runner.g ? current.g : runner.g,
-          .b = current.b > runner.b ? current.b : runner.b,
-      };
-      fb_set_pixel_draft(x, y, 0, combined);
+      for (int z = 0; z < 8; z++) {
+        const rgb_t current = fb_get_pixel_draft(x, y, z);
+        if (z > 0 && current.r == 0 && current.g == 0 && current.b == 0) {
+          continue;
+        }
+
+        const float brightness =
+            width * origin * tip * radial_brightness * breath;
+        if (brightness <= 0.015f) continue;
+
+        const float color_angle = wrap_angle(
+            runner_rotation - rotation - z * CYLINDER_TWIST);
+        const float band_position =
+            color_angle * ICS43434_SPECTRUM_BARS / TWO_PI;
+        const uint8_t hue =
+            hue_phase + (uint8_t)(band_position * 32.0f) - z * 3;
+        const rgb_t runner =
+            scale_color(hue_to_rgb_sine2(hue), brightness);
+        const rgb_t combined = {
+            .r = (uint8_t)fminf(255.0f, current.r + runner.r),
+            .g = (uint8_t)fminf(255.0f, current.g + runner.g),
+            .b = (uint8_t)fminf(255.0f, current.b + runner.b),
+        };
+        fb_set_pixel_draft(x, y, z, combined);
+      }
     }
   }
 }
@@ -128,7 +146,7 @@ void mic_spectrum(effect_t *effect) {
     }
     energy = clampf(energy / (ICS43434_SPECTRUM_BARS * 8.0f), 0.0f, 1.0f);
 
-    const float shell_radius = 0.78f + energy * 0.12f;
+    const float peak_shell_radius = 0.99f;
     for (int band = 0; band < ICS43434_SPECTRUM_BARS; band++) {
       if (!reposition_peak[band]) continue;
 
@@ -137,7 +155,7 @@ void mic_spectrum(effect_t *effect) {
           rotation + peak_z * CYLINDER_TWIST +
           band * TWO_PI / ICS43434_SPECTRUM_BARS;
       const float peak_radius =
-          shell_radius * cube_boundary_radius(angle);
+          peak_shell_radius * cube_boundary_radius(angle);
       peak_x[band] = (uint8_t)lroundf(3.5f + peak_radius * cosf(angle));
       peak_y[band] = (uint8_t)lroundf(3.5f + peak_radius * sinf(angle));
       peak_color[band] =
@@ -155,9 +173,7 @@ void mic_spectrum(effect_t *effect) {
         const float pixel_angle = atan2f(dy, dx);
         const float normalized_radius =
             pixel_radius / cube_boundary_radius(pixel_angle);
-        const float shell = clampf(
-            1.0f - fabsf(normalized_radius - shell_radius) / 0.30f,
-            0.0f, 1.0f);
+        const float shell = spectrum_shell_brightness(normalized_radius);
         if (shell <= 0.05f) continue;
 
         for (int z = 0; z < 8; z++) {
@@ -177,14 +193,15 @@ void mic_spectrum(effect_t *effect) {
               hue_phase + (uint8_t)(band_position * 32.0f) - z * 3;
           const float height_brightness = 0.30f + 0.70f * (z + 1) / 8.0f;
           const rgb_t color = scale_color(
-              hue_to_rgb_sine2(hue), shell * coverage * height_brightness);
+              hue_to_rgb_sine2(hue),
+              shell * coverage * height_brightness * 0.72f);
           fb_set_pixel_draft(x, y, z, color);
         }
       }
     }
 
     const float breath = 0.34f + 0.18f * (0.5f + 0.5f * sinf(breath_phase));
-    draw_runner(runner_rotation, rotation, shell_radius, breath, hue_phase);
+    draw_runner(runner_rotation, rotation, breath, hue_phase);
 
     for (int band = 0; band < ICS43434_SPECTRUM_BARS; band++) {
       if (peak_position_valid[band] &&
