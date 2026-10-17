@@ -24,6 +24,9 @@ static uint32_t effect_timeout_ms = 0;
 static size_t running_effect_idx = 0;
 static const char *RUNNING_EFFECT_IDX = "key0";
 static bool auto_cycle = true;
+static bool ota_active = false;
+static bool ota_restore_running = false;
+static uint8_t cube_brightness = 10;
 
 void effect_loop_task(void *);
 void effect_task(void *);
@@ -77,7 +80,7 @@ void cube_init() {
 
 void cube_start() {
   cube_init();
-  if (running) return;
+  if (running || ota_active) return;
   running = true;
 
   xTaskCreate(effect_loop_task, "effect_loop_task", 2000, NULL,
@@ -160,13 +163,64 @@ const char *cube_get_mode() {
   return auto_cycle ? "Loop" : "Solo";
 }
 
+static void draw_ota_icon() {
+  const rgb_t arrow = {0, 190, 255};
+  const rgb_t tray = {0, 90, 255};
+  const int z = 3;
+
+  fb_clear_draft();
+  for (int y = 0; y <= 3; y++) {
+    fb_set_pixel_draft(3, y, z, arrow);
+    fb_set_pixel_draft(4, y, z, arrow);
+  }
+  fb_set_pixel_draft(1, 3, z, arrow);
+  fb_set_pixel_draft(2, 4, z, arrow);
+  fb_set_pixel_draft(3, 5, z, arrow);
+  fb_set_pixel_draft(4, 5, z, arrow);
+  fb_set_pixel_draft(5, 4, z, arrow);
+  fb_set_pixel_draft(6, 3, z, arrow);
+
+  for (int x = 1; x <= 6; x++) {
+    fb_set_pixel_draft(x, 7, z, tray);
+  }
+  fb_set_pixel_draft(1, 6, z, tray);
+  fb_set_pixel_draft(6, 6, z, tray);
+  fb_draw_draft();
+}
+
+void cube_ota_begin() {
+  if (ota_active) return;
+
+  cube_init();
+  ota_restore_running = running;
+  cube_stop();
+  ota_active = true;
+  cube_set_brightness(cube_brightness);
+  draw_ota_icon();
+  show_static_framebuffer_layer(3);
+}
+
+void cube_ota_abort() {
+  if (!ota_active) return;
+
+  fb_clear();
+  stop_framebuffer();
+  ota_active = false;
+  cube_set_brightness(cube_brightness);
+  if (ota_restore_running) cube_start();
+}
+
 
 void cube_effect_timeout(uint32_t sec) {
   ESP_LOGD(__FILE__, "set effect timeout: %d", sec);
   effect_timeout_ms = pdMS_TO_TICKS(sec * 1000);
 }
 
-void cube_set_brightness(uint8_t x) { tlc_set_brightness(x, x, x); }
+void cube_set_brightness(uint8_t x) {
+  cube_brightness = x;
+  const uint8_t applied = ota_active && x > 24 ? 24 : x;
+  tlc_set_brightness(applied, applied, applied);
+}
 
 void effect_loop_task(void *arg) {
   while (running) {

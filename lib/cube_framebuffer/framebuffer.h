@@ -27,6 +27,7 @@ extern rgb_t frame_buffer[512];
 void init_framebuffer();
 void start_framebuffer();
 void stop_framebuffer();
+void show_static_framebuffer_layer(uint8_t z);
 
 #ifdef __cplusplus
 }

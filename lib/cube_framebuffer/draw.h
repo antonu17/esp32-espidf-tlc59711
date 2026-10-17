@@ -44,6 +44,7 @@ int fb_pixel_is_off(uint8_t x, uint8_t y, uint8_t z);
 void fb_clear();
 
 void fb_set_pixel_draft(uint8_t x, uint8_t y, uint8_t z, rgb_t c);
+rgb_t fb_get_pixel_draft(uint8_t x, uint8_t y, uint8_t z);
 void fb_draw_draft();
 void fb_clear_draft();
 

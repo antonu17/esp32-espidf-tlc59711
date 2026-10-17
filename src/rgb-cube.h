@@ -20,6 +20,8 @@ bool cube_set_effect(const char *name);
 const char *cube_get_effect();
 void cube_set_mode(const char *mode);
 const char *cube_get_mode();
+void cube_ota_begin();
+void cube_ota_abort();
 
 #ifdef __cplusplus
 }  // extern "C"

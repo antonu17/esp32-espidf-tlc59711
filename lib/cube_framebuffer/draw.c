@@ -66,6 +66,13 @@ void fb_set_pixel_draft(uint8_t x, uint8_t y, uint8_t z, rgb_t c) {
     frame_buffer_draft[x_axis + y_axis + z_axis] = c;
 }
 
+rgb_t fb_get_pixel_draft(uint8_t x, uint8_t y, uint8_t z) {
+    if (!in_range(x, y, z)) {
+        return (rgb_t){0, 0, 0};
+    }
+    return frame_buffer_draft[x + y * 8 + z * 64];
+}
+
 void fb_shift(fb_axis_t axis, fb_shift_direction_t direction) {
     uint8_t get_px, set_px, x, y, z;
     rgb_t c;

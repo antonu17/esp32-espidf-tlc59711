@@ -55,6 +55,15 @@ api:
 
 ota:
   - platform: esphome
+    on_begin:
+      then:
+        - lambda: cube_ota_begin();
+    on_abort:
+      then:
+        - lambda: cube_ota_abort();
+    on_error:
+      then:
+        - lambda: cube_ota_abort();
 
 web_server:
   port: 80

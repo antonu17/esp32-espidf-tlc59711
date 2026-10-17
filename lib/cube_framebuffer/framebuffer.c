@@ -91,3 +91,25 @@ void stop_framebuffer() {
     ESP_ERROR_CHECK(esp_timer_stop(write_row_timer));
     running = false;
 }
+
+void show_static_framebuffer_layer(uint8_t z) {
+    if (z > 7) {
+        return;
+    }
+
+    if (running) {
+        ESP_ERROR_CHECK(esp_timer_stop(write_row_timer));
+        running = false;
+    }
+    for (int i = 0; i < 8; i++) {
+        gpio_set_level(rows[i], 0);
+    }
+
+    rgb_t *layer = frame_buffer + z * 64;
+    for (int i = 0; i < 64; i++) {
+        const rgb_t px = *layer++;
+        tlc_set_led(i, px.r, px.g, px.b);
+    }
+    tlc_oneshot_write();
+    gpio_set_level(rows[7 - z], 1);
+}
