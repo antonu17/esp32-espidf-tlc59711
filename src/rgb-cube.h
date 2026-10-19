@@ -14,6 +14,7 @@ void cube_start();
 void cube_stop();
 void cube_effect_timeout(uint32_t);
 void cube_set_brightness(uint8_t);
+void cube_set_microphone_muted(bool muted);
 void cube_next_effect();
 void cube_prev_effect();
 bool cube_set_effect(const char *name);

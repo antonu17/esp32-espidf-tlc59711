@@ -25,6 +25,7 @@ void fireworks(effect_t *effect);
 void sinelines(effect_t *effect);
 void linespin(effect_t *effect);
 void mic_spectrum(effect_t *effect);
+void mic_spectrum_stop(effect_t *effect);
 
 #ifdef __cplusplus
 }

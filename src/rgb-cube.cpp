@@ -60,7 +60,8 @@ void cube_init() {
   effects.push_back(effect_new("vertical_travelers", vertical_travelers, NULL));
   effects.push_back(effect_new("wave_color_wheel", wave_color_wheel, NULL));
   effects.push_back(effect_new("wireframes", wireframes, NULL));
-  effects.push_back(effect_new("mic_spectrum", mic_spectrum, NULL));
+  effects.push_back(
+      effect_new("mic_spectrum", mic_spectrum, mic_spectrum_stop));
 
   uint32_t saved_effect_idx = 0;
   if (nvs_open("rgbcube", NVS_READWRITE, &preferences) == ESP_OK) {
@@ -76,6 +77,9 @@ void cube_init() {
   cube_stop_semaphore = xSemaphoreCreateBinary();
   init_framebuffer();
   ics43434_init();
+
+  ESP_LOGI("rgb_cube", "Cube initialized with %u effects",
+           static_cast<unsigned>(effects.size()));
 }
 
 void cube_start() {
@@ -220,6 +224,10 @@ void cube_set_brightness(uint8_t x) {
   cube_brightness = x;
   const uint8_t applied = ota_active && x > 24 ? 24 : x;
   tlc_set_brightness(applied, applied, applied);
+}
+
+void cube_set_microphone_muted(bool muted) {
+  ics43434_set_muted(muted);
 }
 
 void effect_loop_task(void *arg) {

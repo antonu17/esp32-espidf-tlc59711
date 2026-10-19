@@ -1,14 +1,18 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+#include <esp_log.h>
 #include <math.h>
 
 #include "../../ics43434/ics43434.h"
 #include "effect_functions.h"
 
 #define FRAME_DELAY pdMS_TO_TICKS(40)
+#define FRAME_SECONDS 0.040f
 #define BAR_SCALE 32.0f
 #define TWO_PI 6.28318530718f
 #define CYLINDER_TWIST 0.09f
+
+static const char *TAG = "mic_spectrum";
 
 static float clampf(float value, float minimum, float maximum) {
   return fminf(maximum, fmaxf(minimum, value));
@@ -107,11 +111,16 @@ void mic_spectrum(effect_t *effect) {
   bool peak_position_valid[ICS43434_SPECTRUM_BARS] = {false};
   float rotation = 0;
   float runner_rotation = 0;
+  float runner_step = 0.135f;
+  float runner_bpm = 0;
   float breath_phase = 0;
+  bool bpm_locked = false;
   uint8_t hue_phase = 0;
 
   ics43434_init();
+  ics43434_set_spectrum_enabled(true);
   fb_clear();
+  ESP_LOGI(TAG, "Microphone spectrum effect started");
 
   while (effect->running) {
     float bars[ICS43434_SPECTRUM_BARS];
@@ -215,11 +224,38 @@ void mic_spectrum(effect_t *effect) {
     fb_draw_draft();
     const float spin_step = 0.045f + energy * 0.055f;
     rotation = wrap_angle(rotation + spin_step);
-    runner_rotation = wrap_angle(runner_rotation + spin_step * 3.0f);
+
+    float bpm = 0;
+    float bpm_confidence = 0;
+    if (ics43434_read_bpm(&bpm, &bpm_confidence, 0)) {
+      const bool was_locked = bpm_locked;
+      runner_bpm = bpm;
+      if (bpm_confidence >= 0.72f) bpm_locked = true;
+      if (bpm_confidence < 0.50f) bpm_locked = false;
+
+      if (!was_locked && bpm_locked) {
+        ESP_LOGI(TAG, "BPM locked at %.1f (confidence %.0f%%); radar using BPM speed",
+                 runner_bpm, bpm_confidence * 100.0f);
+      } else if (was_locked && !bpm_locked) {
+        ESP_LOGI(TAG,
+                 "BPM lock lost (confidence %.0f%%); radar returning to 3x spin",
+                 bpm_confidence * 100.0f);
+      }
+    }
+    const float target_runner_step =
+        bpm_locked ? TWO_PI * runner_bpm / 60.0f * FRAME_SECONDS
+                   : spin_step * 3.0f;
+    runner_step += (target_runner_step - runner_step) * 0.10f;
+    runner_rotation = wrap_angle(runner_rotation + runner_step);
     breath_phase = wrap_angle(breath_phase + 0.10f);
     hue_phase++;
     vTaskDelay(FRAME_DELAY);
   }
 
   fb_clear();
+}
+
+void mic_spectrum_stop(effect_t *effect) {
+  (void)effect;
+  ics43434_set_spectrum_enabled(false);
 }

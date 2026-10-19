@@ -39,6 +39,7 @@ Improv over USB or connect to the open `RGB Cube Setup` access point and visit
 - Cube Effect
 - Cube Effect Timeout
 - Cube Brightness
+- Microphone Mute
 - Previous and next effect buttons
 - Cube Restart
 

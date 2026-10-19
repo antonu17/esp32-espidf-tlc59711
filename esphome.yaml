@@ -17,6 +17,7 @@ esphome:
       then:
         - lambda: |-
             cube_init();
+            cube_set_microphone_muted(id(microphone_mute).state);
             cube_effect_timeout(id(effect_timeout).state);
             cube_set_brightness(id(brightness).state);
             if (id(cube_switch).state) {
@@ -33,6 +34,7 @@ esp32:
   board: nodemcu-32s
   framework:
     type: esp-idf
+    log_level: INFO
     sdkconfig_options:
       # Keep Wi-Fi scheduling away from the time-sensitive framebuffer row
       # refresh, which runs from the esp_timer task on core 0.
@@ -82,6 +84,16 @@ improv_serial:
   next_url: http://{{ip_address}}/
 
 switch:
+  - platform: template
+    id: microphone_mute
+    name: Microphone Mute
+    restore_mode: RESTORE_DEFAULT_OFF
+    optimistic: true
+    turn_on_action:
+      - lambda: cube_set_microphone_muted(true);
+    turn_off_action:
+      - lambda: cube_set_microphone_muted(false);
+
   - platform: template
     id: cube_switch
     name: Cube Switch
